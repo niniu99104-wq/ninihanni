@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿霓の質感記帳</title>
+    <style>
+        /* 質感莫蘭迪配色 */
+        body { font-family: "微軟正黑體", sans-serif; background-color: #F7F4F0; color: #5C544E; max-width: 480px; margin: 0 auto; padding: 20px; }
+        .container { background: #FFFFFF; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(184, 174, 166, 0.2); }
+        h2 { text-align: center; color: #8B7355; margin-top: 0; font-weight: 600; letter-spacing: 2px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
+        input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
+        input:focus, select:focus { border-color: #C0A991; }
+        button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: 0.2s; }
+        button:hover { background-color: #735F46; }
+        button:disabled { background-color: #D3CBC3; }
+        
+        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .radio-btn { flex: 1; text-align: center; padding: 10px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
+        .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
+        .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
+
+        .list-container { margin-top: 30px; }
+        .record-item { background: #FCFBF9; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+        .record-expense { border-left-color: #C87A7E; }
+        .record-income { border-left-color: #6B8E6B; }
+        .record-info { display: flex; flex-direction: column; gap: 4px; }
+        .record-title { font-weight: bold; font-size: 16px; }
+        .record-detail { font-size: 13px; color: #8C847D; }
+        .record-amount { font-size: 18px; font-weight: bold; }
+        .amount-expense { color: #C87A7E; }
+        .amount-income { color: #6B8E6B; }
+        #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>阿霓の記帳本</h2>
+    
+    <div class="radio-group">
+        <div class="radio-btn active-expense" id="btn-expense" onclick="setType('支出')">支出</div>
+        <div class="radio-btn" id="btn-income" onclick="setType('收入')">收入</div>
+    </div>
+
+    <form id="form">
+        <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="date" required>
+        </div>
+
+        <div class="form-group" id="fixedVarGroup">
+            <label>類型</label>
+            <select id="fixedVar">
+                <option value="變動費用">變動費用 (飲食/購物/交通)</option>
+                <option value="固定費用">固定費用 (房租/水電/保險)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>類別</label>
+            <select id="category" required></select>
+        </div>
+
+        <div class="form-group">
+            <label>帳戶來源</label>
+            <select id="account" required>
+                <option value="現金">現金</option>
+                <option value="銀行轉帳">銀行轉帳</option>
+                <option value="信用卡">信用卡</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>金額</label>
+            <input type="number" id="amount" placeholder="輸入數字" required min="1">
+        </div>
+
+        <div class="form-group">
+            <label>備註 (選填)</label>
+            <input type="text" id="note" placeholder="例如：與同事聚餐、買了哪本實體書">
+        </div>
+
+        <button type="submit" id="submitBtn">記上一筆</button>
+    </form>
+</div>
+
+<div class="container list-container">
+    <h3 style="color:#8B7355; margin-top:0;">最新紀錄</h3>
+    <div id="loading">連線同步中...</div>
+    <div id="recordList"></div>
+</div>
+
+<script>
+    // 🛑 把這裡換成你的 Google Apps Script 網址
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
+    
+    let currentType = '支出';
+    document.getElementById('date').valueAsDate = new Date();
+
+    const categories = {
+        '支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '自動扣款App', '加油', '搭車費', '住宿', '線上購物', '實體購物', '其他'],
+        '收入': ['甜點店開單', '沐光毓師資', '沐光毓小幫手', '其他']
+    };
+
+    function setType(type) {
+        currentType = type;
+        document.getElementById('btn-expense').className = type === '支出' ? 'radio-btn active-expense' : 'radio-btn';
+        document.getElementById('btn-income').className = type === '收入' ? 'radio-btn active-income' : 'radio-btn';
+        document.getElementById('fixedVarGroup').style.display = type === '支出' ? 'block' : 'none';
+        
+        const catSelect = document.getElementById('category');
+        catSelect.innerHTML = categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    
+    // 初始化選單
+    setType('支出');
+
+    // 讀取資料
+    fetch(GOOGLE_API_URL).then(res => res.json()).then(data => updateUI(data)).catch(err => console.log('讀取失敗'));
+
+    document.getElementById('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        
+        const date = document.getElementById('date').value;
+        const fixedVar = currentType === '支出' ? document.getElementById('fixedVar').value : '-';
+        const category = document.getElementById('category').value;
+        const account = document.getElementById('account').value;
+        const amount = document.getElementById('amount').value;
+        const note = document.getElementById('note').value || '-';
+
+        btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
+
+        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&fixedVar=${fixedVar}&category=${category}&account=${account}&amount=${amount}&note=${note}`;
+
+        fetch(submitUrl).then(res => res.json()).then(data => {
+            updateUI(data);
+            document.getElementById('amount').value = '';
+            document.getElementById('note').value = '';
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記上一筆';
+        }).catch(err => {
+            alert('連線失敗，請檢查網址');
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記上一筆';
+        });
+    });
+
+    function updateUI(data) {
+        const recordList = document.getElementById('recordList');
+        recordList.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            recordList.innerHTML = '<div style="text-align:center; color:#8C847D;">目前還沒有紀錄喔</div>';
+            return;
+        }
+
+        // 只顯示最近 10 筆，免得網頁拉太長
+        data.slice(0, 10).forEach(row => {
+            const isIncome = row[1] === '收入';
+            recordList.innerHTML += `
+                <div class="record-item ${isIncome ? 'record-income' : 'record-expense'}">
+                    <div class="record-info">
+                        <span class="record-title">${row[3]} <span style="font-weight:normal; font-size:12px; background:#E6E2DD; padding:2px 6px; border-radius:4px;">${row[4]}</span></span>
+                        <span class="record-detail">${row[0]} | ${row[6] !== '-' ? row[6] : '無備註'}</span>
+                    </div>
+                    <div class="record-amount ${isIncome ? 'amount-income' : 'amount-expense'}">
+                        ${isIncome ? '+' : '-'}${row[5]}
+                    </div>
+                </div>
+            `;
+        });
+    }
+</script>
+
+</body>
+</html>
