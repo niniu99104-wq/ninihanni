@@ -158,10 +158,10 @@
             updateUI(data);
             document.getElementById('amount').value = '';
             document.getElementById('note').value = '';
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記上一筆';
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄';
         }).catch(err => {
             alert('連線失敗，請檢查網址');
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記上一筆';
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄';
         });
     });
 
