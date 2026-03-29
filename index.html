@@ -82,7 +82,7 @@
             <input type="text" id="note" placeholder="寫點什麼...">
         </div>
 
-        <button type="submit" id="submitBtn">記上一筆</button>
+        <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
 </div>
 
@@ -158,10 +158,10 @@
             updateUI(data);
             document.getElementById('amount').value = '';
             document.getElementById('note').value = '';
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄';
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
         }).catch(err => {
             alert('連線失敗，請檢查網址');
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄';
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
         });
     });
 
