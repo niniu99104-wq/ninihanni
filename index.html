@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>阿霓の質感記帳</title>
     <style>
-        /* 質感莫蘭迪配色 */
         body { font-family: "微軟正黑體", sans-serif; background-color: #F7F4F0; color: #5C544E; max-width: 480px; margin: 0 auto; padding: 20px; }
         .container { background: #FFFFFF; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(184, 174, 166, 0.2); }
         h2 { text-align: center; color: #8B7355; margin-top: 0; font-weight: 600; letter-spacing: 2px; }
@@ -22,7 +21,10 @@
         .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
         .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
 
-        .list-container { margin-top: 30px; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+        .delete-btn { width: auto; padding: 6px 12px; margin: 0; background-color: transparent; color: #C87A7E; border: 1px solid #C87A7E; font-size: 12px; border-radius: 6px; }
+        .delete-btn:hover { background-color: #C87A7E; color: white; }
+        
         .record-item { background: #FCFBF9; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
         .record-expense { border-left-color: #C87A7E; }
         .record-income { border-left-color: #6B8E6B; }
@@ -51,11 +53,12 @@
             <input type="date" id="date" required>
         </div>
 
-        <div class="form-group" id="fixedVarGroup">
+        <div class="form-group" id="subTypeGroup">
             <label>類型</label>
-            <select id="fixedVar">
-                <option value="變動費用">變動費用 (飲食/購物/交通)</option>
-                <option value="固定費用">固定費用 (房租/水電/保險)</option>
+            <select id="subType" onchange="updateCategories()">
+                <option value="變動費用">變動費用</option>
+                <option value="固定費用">固定費用</option>
+                <option value="小孩費用">小孩費用</option>
             </select>
         </div>
 
@@ -66,11 +69,7 @@
 
         <div class="form-group">
             <label>帳戶來源</label>
-            <select id="account" required>
-                <option value="現金">現金</option>
-                <option value="銀行轉帳">銀行轉帳</option>
-                <option value="信用卡">信用卡</option>
-            </select>
+            <select id="account" required></select>
         </div>
 
         <div class="form-group">
@@ -80,39 +79,56 @@
 
         <div class="form-group">
             <label>備註 (選填)</label>
-            <input type="text" id="note" placeholder="例如：與同事聚餐、買了哪本實體書">
+            <input type="text" id="note" placeholder="寫點什麼...">
         </div>
 
         <button type="submit" id="submitBtn">記上一筆</button>
     </form>
 </div>
 
-<div class="container list-container">
-    <h3 style="color:#8B7355; margin-top:0;">最新紀錄</h3>
+<div class="container" style="margin-top: 20px;">
+    <div class="list-header">
+        <h3 style="color:#8B7355; margin:0;">最新紀錄</h3>
+        <button class="delete-btn" id="deleteBtn" onclick="deleteLastRecord()">刪除最新一筆</button>
+    </div>
     <div id="loading">連線同步中...</div>
-    <div id="recordList"></div>
+    <div id="recordList" style="margin-top: 15px;"></div>
 </div>
 
 <script>
-    // 🛑 把這裡換成你的 Google Apps Script 網址
+    // 🛑 把這裡換成妳的 Google Apps Script 網址
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
     
     let currentType = '支出';
     document.getElementById('date').valueAsDate = new Date();
 
-    const categories = {
-        '支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '自動扣款App', '加油', '搭車費', '住宿', '線上購物', '實體購物', '其他'],
-        '收入': ['甜點店開單', '沐光毓師資', '沐光毓小幫手', '其他']
+    const categoryMap = {
+        '變動費用': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '加油', '搭車費', '線上購物', '實體購物'],
+        '固定費用': ['房租', '水費', '電費', '保險(小孩)', '保險(大人)', '汽機車牌照稅', '燃料費', '電信費', '瓦斯費', '債務還款', 'APP訂閱'],
+        '小孩費用': ['學雜費', '尿布', '娛樂', '健康'],
+        '收入': ['私訊訂購', '表單訂購', '沐光毓師資', '沐光毓小幫手']
+    };
+
+    const accountMap = {
+        '支出': ['現金', '銀行轉帳', '信用卡', 'Line Pay', 'iPass Money'],
+        '收入': ['現金', '銀行轉帳', 'Line Pay', 'iPass Money']
     };
 
     function setType(type) {
         currentType = type;
         document.getElementById('btn-expense').className = type === '支出' ? 'radio-btn active-expense' : 'radio-btn';
         document.getElementById('btn-income').className = type === '收入' ? 'radio-btn active-income' : 'radio-btn';
-        document.getElementById('fixedVarGroup').style.display = type === '支出' ? 'block' : 'none';
+        document.getElementById('subTypeGroup').style.display = type === '支出' ? 'block' : 'none';
         
-        const catSelect = document.getElementById('category');
-        catSelect.innerHTML = categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+        // 更新帳戶來源選項
+        document.getElementById('account').innerHTML = accountMap[type].map(a => `<option value="${a}">${a}</option>`).join('');
+        
+        updateCategories();
+    }
+
+    function updateCategories() {
+        const subType = currentType === '支出' ? document.getElementById('subType').value : '收入';
+        document.getElementById('category').innerHTML = categoryMap[subType].map(c => `<option value="${c}">${c}</option>`).join('');
     }
     
     // 初始化選單
@@ -128,7 +144,7 @@
         const loading = document.getElementById('loading');
         
         const date = document.getElementById('date').value;
-        const fixedVar = currentType === '支出' ? document.getElementById('fixedVar').value : '-';
+        const subType = currentType === '支出' ? document.getElementById('subType').value : '-';
         const category = document.getElementById('category').value;
         const account = document.getElementById('account').value;
         const amount = document.getElementById('amount').value;
@@ -136,7 +152,7 @@
 
         btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
 
-        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&fixedVar=${fixedVar}&category=${category}&account=${account}&amount=${amount}&note=${note}`;
+        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&subType=${subType}&category=${category}&account=${account}&amount=${amount}&note=${note}`;
 
         fetch(submitUrl).then(res => res.json()).then(data => {
             updateUI(data);
@@ -149,6 +165,22 @@
         });
     });
 
+    function deleteLastRecord() {
+        if (!confirm('確定要刪除試算表裡最新的一筆紀錄嗎？這動作無法復原喔。')) return;
+        
+        const btn = document.getElementById('deleteBtn');
+        const loading = document.getElementById('loading');
+        btn.disabled = true; loading.style.display = 'block'; btn.innerText = '刪除中...';
+
+        fetch(`${GOOGLE_API_URL}?action=deleteLast`).then(res => res.json()).then(data => {
+            updateUI(data);
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '刪除最新一筆';
+        }).catch(err => {
+            alert('刪除失敗，請檢查網址');
+            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '刪除最新一筆';
+        });
+    }
+
     function updateUI(data) {
         const recordList = document.getElementById('recordList');
         recordList.innerHTML = '';
@@ -158,9 +190,9 @@
             return;
         }
 
-        // 只顯示最近 10 筆，免得網頁拉太長
         data.slice(0, 10).forEach(row => {
             const isIncome = row[1] === '收入';
+            // row[2] 是 subType, row[3] 是 category, row[4] 是 account, row[5] 是 amount
             recordList.innerHTML += `
                 <div class="record-item ${isIncome ? 'record-income' : 'record-expense'}">
                     <div class="record-info">
