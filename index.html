@@ -16,11 +16,9 @@
         input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
         .input-expense:focus { border-color: #C87A7E !important; }
         .input-income:focus { border-color: #6B8E6B !important; }
-        button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: 0.2s; }
-        button:hover { background-color: #735F46; }
-        button:disabled { background-color: #D3CBC3; }
+        button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; background: #FCFBF9; }
+        .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
         .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
         .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
         .balance-box { font-size: 20px; font-weight: bold; text-align: center; margin: 15px 0; color: #5C544E; background: #F7F4F0; padding: 15px; border-radius: 8px; }
@@ -28,10 +26,6 @@
         .record-item { background: #FCFBF9; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
         .record-expense { border-left-color: #C87A7E; }
         .record-income { border-left-color: #6B8E6B; }
-        .record-info { display: flex; flex-direction: column; gap: 4px; }
-        .record-title { font-weight: bold; font-size: 16px; }
-        .record-detail { font-size: 13px; color: #8C847D; }
-        .record-amount { font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -51,7 +45,11 @@
         <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
         <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
         <div class="form-group"><label>帳戶來源</label><select id="account" required onchange="autoFillAmount()"></select></div>
-        <div class="form-group"><label>金額 (含運費)</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
+        <div class="form-group"><label id="mainAmountLabel">實付金額 (含運費)</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
+        <div class="form-group" id="creditGroup" style="display:none; background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;">
+            <label style="color:#D48806;">✨ 使用購物金金額</label>
+            <input type="text" inputmode="numeric" id="creditAmount" placeholder="沒用就留空">
+        </div>
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
         <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
@@ -59,7 +57,6 @@
 
 <div class="container" style="margin-top: 20px;">
     <div class="balance-box" id="box-twd">台幣結餘: <span id="twdBalance" style="color:#8B7355;">0</span> 元</div>
-    <div class="balance-box" id="box-krw" style="display:none;">批發網結餘: <span id="krwBalance" style="color:#8B7355;">0</span> 點</div>
     <div id="loading">連線同步中...</div>
     <div id="recordList" style="margin-top: 15px;"></div>
 </div>
@@ -70,160 +67,131 @@
     document.getElementById('date').valueAsDate = new Date();
 
     const categoryMap = {
-        '變動支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '加油', '搭車費', '線上購物', '實體購物'],
-        '固定支出': ['房租', '水費', '電費', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
-        '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
-        '選品支出 (零售)': ['運費', '手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'],
-        '代理支出 (批發)': ['代墊款', '斷貨退款', '國際運費', '國內運費', '批發儲值(台幣)'],
-        '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
-        '其他支出': ['其他'],
-        '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
-        '選品收入 (零售)': ['記事本收款', 'EasyStore 訂單'],
-        '代理收入 (批發)': ['倉庫整理費', '代墊款回收', '國際運費收回', '國內運費收回'],
-        '甜點收入': ['實體門市', '私訊訂購', '表單訂購'],
-        '其他收入': ['其他']
+        '支出': {
+            '變動支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '加油', '搭車費', '線上購物', '實體購物'],
+            '固定支出': ['房租', '水費', '電費', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
+            '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
+            '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
+            '選品支出 (零售)': ['運費', '手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'],
+            '代理支出 (批發)': ['代墊款', '斷貨退款', '國際運費', '國內運費', '批發儲值(台幣)'],
+            '其他支出': ['其他']
+        },
+        '收入': {
+            '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
+            '甜點收入': ['實體門市', '私訊訂購', '表單訂購'],
+            '選品收入 (零售)': ['記事本收款', 'EasyStore 訂單'],
+            '代理收入 (批發)': ['倉庫整理費', '代墊款回收', '國際運費收回', '國內運費收回'],
+            '其他收入': ['其他']
+        }
     };
 
-    const generalAccounts = ['現金', '信用卡', 'Line Pay', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-    const businessAccounts = ['ES購物金', '藍新待撥款', '批發網點數'];
-    const logisticsAccounts = ['賣貨便', '店到店', '郵局配送', '新竹物流(小物)'];
+    const accBase = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
 
-    function setLedger(l) { currentLedger = l; setType('支出'); renderList(); document.getElementById('tab-twd').className = l==='TWD'?'ledger-tab active':'ledger-tab'; document.getElementById('tab-krw').className = l==='KRW'?'ledger-tab active':'ledger-tab'; document.getElementById('box-twd').style.display = l==='TWD'?'block':'none'; document.getElementById('box-krw').style.display = l==='KRW'?'block':'none'; }
-    
+    function setLedger(l) { currentLedger = l; setType('支出'); renderList(); document.getElementById('tab-twd').className = l==='TWD'?'ledger-tab active':'ledger-tab'; }
     function setType(t) { 
         currentType = t; 
         document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn';
         document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn';
         document.getElementById('amount').className = t==='支出'?'input-expense':'input-income';
-        
-        if(currentLedger === 'TWD'){ 
-            document.getElementById('subTypeGroup').style.display='block'; 
-            document.getElementById('subType').innerHTML = t==='支出'?`<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出 (零售)">選品支出 (零售)</option><option value="代理支出 (批發)">代理支出 (批發)</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>`:`<option value="個人收入">個人收入</option><option value="選品收入 (零售)">選品收入 (零售)</option><option value="代理收入 (批發)">代理收入 (批發)</option><option value="甜點收入">甜點收入</option><option value="其他收入">其他收入</option>`; 
-            updateCategories(); 
-        }else{ 
-            document.getElementById('subTypeGroup').style.display='none'; 
-            document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>'; 
-            document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>'; 
-        } 
+        const subs = Object.keys(categoryMap[t]);
+        document.getElementById('subType').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+        updateCategories(); 
     }
 
     function updateCategories() {
-        if(currentLedger === 'KRW') return;
-        const subType = document.getElementById('subType').value;
-        const catSelect = document.getElementById('category');
-        if (categoryMap[subType]) {
-            catSelect.innerHTML = categoryMap[subType].map(c => `<option value="${c}">${c}</option>`).join('');
-        }
+        const sub = document.getElementById('subType').value;
+        const cats = categoryMap[currentType][sub];
+        document.getElementById('category').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
         updateAccounts();
     }
 
     function updateAccounts() {
-        if(currentLedger === 'KRW') return;
-        const subType = document.getElementById('subType').value;
+        const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
         const accSelect = document.getElementById('account');
+        const creditGroup = document.getElementById('creditGroup');
+        let list = [...accBase];
 
-        let availableAccounts = [...generalAccounts];
-        
-        // 只要是選品或代理，就加入商業帳戶
-        if (subType.includes('選品') || subType.includes('代理')) {
-            availableAccounts = [...availableAccounts, ...businessAccounts];
+        // 顯示購物金欄位邏輯
+        creditGroup.style.display = (cat === 'EasyStore 訂單') ? 'block' : 'none';
+
+        if (sub.includes('選品') || sub.includes('代理') || sub === '甜點收入') {
+            if (!['運費', '手續費', '國際運費', '國內運費'].includes(cat)) list.push('ES購物金', '藍新待撥款', '批發網點數');
+            if (currentType === '支出' && (cat === '運費' || cat === '國內運費')) list.push('賣貨便', '店到店', '郵局配送', '新竹物流(小物)');
         }
+        if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
+        if (cat === '活動購物金') list = ['ES購物金'];
+        if (cat === '記事本收款') list = ['銀行轉帳 (台新銀行)', 'Line Pay', 'iPass Money'];
+        if (cat === 'EasyStore 訂單') list = ['藍新待撥款', 'Line Pay', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)', 'ES購物金'];
 
-        // 只有特定類別才解鎖物流帳戶
-        if (currentType === '支出') {
-            if ((subType === '選品支出 (零售)' && cat === '運費') || 
-                (subType === '代理支出 (批發)' && cat === '國內運費')) {
-                availableAccounts = [...availableAccounts, ...logisticsAccounts];
-            }
-        }
-
-        // 強迫症字數排序
-        availableAccounts.sort((a, b) => a.length - b.length);
-        
-        const currentAcc = accSelect.value;
-        accSelect.innerHTML = availableAccounts.map(a => `<option value="${a}">${a}</option>`).join('');
-        
-        // 如果原本選的帳戶還在，就保留
-        if (availableAccounts.includes(currentAcc)) {
-            accSelect.value = currentAcc;
-        }
-
+        list.sort((a, b) => a.length - b.length);
+        accSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
         autoFillAmount();
     }
 
     function autoFillAmount() {
         const acc = document.getElementById('account').value;
-        const amtInput = document.getElementById('amount');
-        if (acc === '賣貨便') {
-            amtInput.value = '38';
-        } else if (acc === '店到店') {
-            amtInput.value = '60';
-        } else if (acc === '新竹物流(小物)' || acc === '郵局配送') {
-            if (amtInput.value === '38' || amtInput.value === '60') {
-                amtInput.value = '';
-            }
-        }
+        if (acc === '賣貨便') document.getElementById('amount').value = '38';
+        else if (acc === '店到店') document.getElementById('amount').value = '60';
     }
     
-    setLedger('TWD');
     fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
 
     document.getElementById('form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const amtStr = document.getElementById('amount').value.replace(/\D/g,'');
-        if (!amtStr) { alert('請輸入數字！'); return; }
-        const amt = parseInt(amtStr);
+        const amt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
+        const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
         const note = document.getElementById('note').value;
-        const sub = currentLedger==='KRW'?'批發網(韓幣)':document.getElementById('subType').value;
+        const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
         const acc = document.getElementById('account').value;
         const date = document.getElementById('date').value;
-
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
-        btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
+
+        btn.disabled = true; loading.style.display = 'block';
 
         const sendReq = async (d, t, st, c, a, am, n) => {
-            const url = `${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${n}`;
-            const res = await fetch(url);
+            const res = await fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${n}`);
             return await res.json();
         };
 
         try {
             if (currentType === '收入' && cat === 'EasyStore 訂單') {
+                const totalAmt = amt + creditAmt; // 總業績
                 let sf = 0;
-                if (amt < 1500) { sf = confirm("未滿$1500：\n[確定]：超商$60\n[取消]：宅配$100") ? 60 : 100; }
-                else if (amt < 2000) { sf = confirm("滿$1500未滿$2000：\n[確定]：超商免運\n[取消]：宅配$100") ? 0 : 100; }
-                
+                if (totalAmt < 1500) sf = confirm("總額未滿$1500，扣運費嗎？\n[確定]$60 / [取消]$100") ? 60 : 100;
+                else if (totalAmt < 2000) sf = confirm("總額滿$1500未滿$2000：\n[確定]超取免運 / [取消]宅配$100") ? 0 : 100;
+
+                // 1. 記實付部分
                 await sendReq(date, '收入', sub, cat, acc, amt, note);
-                if (acc === '藍新待撥款') { await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%刷卡)${note}`); }
-                if (sf > 0) { globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `(官網運費)${note}`); }
-                else { globalData = await fetch(GOOGLE_API_URL).then(r=>r.json()); }
+                // 2. 記購物金部分 (如果有的話)
+                if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(訂單扣抵)${note}`);
+                // 3. 記手續費 (只按實付金額算)
+                if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%)${note}`);
+                // 4. 記運費
+                if (sf > 0) globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `(官網運費)${note}`);
+                else globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
+                alert(`拆帳完成：實收${amt} + 購物金${creditAmt}。運費與手續費已自動扣除。`);
             } else {
                 globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
             }
-            renderList();
-            document.getElementById('amount').value=''; document.getElementById('note').value='';
-        } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆'; }
+            renderList(); document.getElementById('amount').value=''; document.getElementById('creditAmount').value=''; document.getElementById('note').value='';
+        } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; }
     });
 
     function renderList() {
         const list = document.getElementById('recordList'); list.innerHTML = '';
-        let tB = 0, kB = 0;
+        let tB = 0;
         if (!Array.isArray(globalData)) return;
-        globalData.forEach(r => {
-            const isI = r[1] === '收入', am = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
-            if(r[2]==='批發網(韓幣)') kB += isI?am:-am; else tB += isI?am:-am;
-        });
+        globalData.forEach(r => { if(r[1]==='收入') tB += parseInt(r[5]); else tB -= parseInt(r[5]); });
         document.getElementById('twdBalance').innerText = tB.toLocaleString();
-        document.getElementById('krwBalance').innerText = kB.toLocaleString();
-        globalData.filter(r => currentLedger==='KRW'?r[2]==='批發網(韓幣)':r[2]!=='批發網(韓幣)').slice(0,15).forEach(r => {
+        globalData.slice(0,15).forEach(r => {
             const isI = r[1] === '收入';
-            const val = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
-            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div class="record-info"><span class="record-title">${r[3]} <small style="background:#E6E2DD; padding:2px 6px; border-radius:4px;">${r[4]}</small></span><span class="record-detail">${r[0]} | ${r[6]||'無'}</span></div><div class="record-amount" style="color:${isI?'#6B8E6B':'#C87A7E'}">${isI?'+':'-'}${val.toLocaleString()}</div></div>`;
+            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div><b>${r[3]}</b> <small>${r[4]}</small><br><small>${r[0]} | ${r[6]||''}</small></div><div style="color:${isI?'#6B8E6B':'#C87A7E'}"><b>${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</b></div></div>`;
         });
     }
+    setType('支出');
 </script>
 </body>
 </html>
