@@ -73,22 +73,24 @@
         '變動支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '加油', '搭車費', '線上購物', '實體購物'],
         '固定支出': ['房租', '水費', '電費', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
         '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
-        '選品支出': ['運費', '代墊款', '手續費', '藍新沖銷', '選品進貨', '批發儲值(台幣)'],
+        '選品支出 (零售)': ['國際運費', '國內運費', '手續費', '藍新沖銷', '選品進貨'],
+        '代理支出 (批發)': ['國際運費', '國內運費', '批發儲值(台幣)', '代墊款'],
         '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
         '其他支出': ['其他'],
         '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
+        '選品收入 (零售)': ['EasyStore 訂單', '記事本收款'],
+        '代理收入 (批發)': ['倉庫整理費', '國際運費收回', '國內運費收回', '代墊款回收'],
         '甜點收入': ['實體門市', '私訊訂購', '表單訂購'],
-        '選品收入': ['記事本收款', '代墊款回收', 'EasyStore 訂單'],
         '其他收入': ['其他']
     };
 
     const accountMap = {
-        '支出': ['現金', '信用卡', 'Line Pay', 'iPass Money', '藍新待撥款', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'],
-        '收入': ['現金', 'Line Pay', 'iPass Money', '藍新待撥款', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)']
+        '支出': ['現金', '信用卡', 'Line Pay', 'iPass Money', '藍新待撥款', '賣貨便', '店到店', '新竹物流', '郵局配送', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'],
+        '收入': ['現金', 'Line Pay', 'iPass Money', '藍新待撥款', '賣貨便', '店到店', '新竹物流', '郵局配送', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)']
     };
 
     function setLedger(l) { currentLedger = l; setType('支出'); renderList(); document.getElementById('tab-twd').className = l==='TWD'?'ledger-tab active':'ledger-tab'; document.getElementById('tab-krw').className = l==='KRW'?'ledger-tab active':'ledger-tab'; document.getElementById('box-twd').style.display = l==='TWD'?'block':'none'; document.getElementById('box-krw').style.display = l==='KRW'?'block':'none'; }
-    function setType(t) { currentType = t; document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn'; document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn'; document.getElementById('amount').className = t==='支出'?'input-expense':'input-income'; if(currentLedger==='TWD'){ document.getElementById('subTypeGroup').style.display='block'; document.getElementById('subType').innerHTML = t==='支出'?`<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出">選品支出</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>`:`<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`; document.getElementById('account').innerHTML = accountMap[t].map(a=>`<option value="${a}">${a}</option>`).join(''); updateCategories(); }else{ document.getElementById('subTypeGroup').style.display='none'; document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>'; document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>'; } }
+    function setType(t) { currentType = t; document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn'; document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn'; document.getElementById('amount').className = t==='支出'?'input-expense':'input-income'; if(currentLedger==='TWD'){ document.getElementById('subTypeGroup').style.display='block'; document.getElementById('subType').innerHTML = t==='支出'?`<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出 (零售)">選品支出 (零售)</option><option value="代理支出 (批發)">代理支出 (批發)</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>`:`<option value="個人收入">個人收入</option><option value="選品收入 (零售)">選品收入 (零售)</option><option value="代理收入 (批發)">代理收入 (批發)</option><option value="甜點收入">甜點收入</option><option value="其他收入">其他收入</option>`; document.getElementById('account').innerHTML = accountMap[t].map(a=>`<option value="${a}">${a}</option>`).join(''); updateCategories(); }else{ document.getElementById('subTypeGroup').style.display='none'; document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>'; document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>'; } }
     function updateCategories() { if(currentLedger==='KRW')return; const s=document.getElementById('subType').value; if(categoryMap[s]) document.getElementById('category').innerHTML = categoryMap[s].map(c=>`<option value="${c}">${c}</option>`).join(''); }
     
     setLedger('TWD');
@@ -96,7 +98,9 @@
 
     document.getElementById('form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const amt = parseInt(document.getElementById('amount').value.replace(/\D/g,''));
+        const amtStr = document.getElementById('amount').value.replace(/\D/g,'');
+        if (!amtStr) { alert('請輸入數字！'); return; }
+        const amt = parseInt(amtStr);
         const note = document.getElementById('note').value;
         const sub = currentLedger==='KRW'?'批發網(韓幣)':document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
@@ -116,12 +120,12 @@
         try {
             if (currentType === '收入' && cat === 'EasyStore 訂單') {
                 let sf = 0;
-                if (amt < 1500) { sf = confirm("超商$60(確定) / 宅配$100(取消)") ? 60 : 100; }
-                else if (amt < 2000) { sf = confirm("超商免運(確定) / 宅配$100(取消)") ? 0 : 100; }
+                if (amt < 1500) { sf = confirm("未滿$1500：\n[確定]：超商$60\n[取消]：宅配$100") ? 60 : 100; }
+                else if (amt < 2000) { sf = confirm("滿$1500未滿$2000：\n[確定]：超商免運\n[取消]：宅配$100") ? 0 : 100; }
                 
                 await sendReq(date, '收入', sub, cat, acc, amt, note);
-                if (acc === '藍新待撥款') { await sendReq(date, '支出', '選品支出', '手續費', acc, Math.round(amt*0.028), `(2.8%)${note}`); }
-                if (sf > 0) { globalData = await sendReq(date, '支出', '選品支出', '運費', acc, sf, `(運費)${note}`); }
+                if (acc === '藍新待撥款') { await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%刷卡)${note}`); }
+                if (sf > 0) { globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `(官網運費)${note}`); }
                 else { globalData = await fetch(GOOGLE_API_URL).then(r=>r.json()); }
             } else {
                 globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
@@ -134,13 +138,14 @@
     function renderList() {
         const list = document.getElementById('recordList'); list.innerHTML = '';
         let tB = 0, kB = 0;
+        if (!Array.isArray(globalData)) return;
         globalData.forEach(r => {
             const isI = r[1] === '收入', am = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
             if(r[2]==='批發網(韓幣)') kB += isI?am:-am; else tB += isI?am:-am;
         });
         document.getElementById('twdBalance').innerText = tB.toLocaleString();
         document.getElementById('krwBalance').innerText = kB.toLocaleString();
-        globalData.filter(r => currentLedger==='KRW'?r[2]==='批發網(韓幣)':r[2]!=='批發網(韓幣)').slice(0,12).forEach(r => {
+        globalData.filter(r => currentLedger==='KRW'?r[2]==='批發網(韓幣)':r[2]!=='批發網(韓幣)').slice(0,15).forEach(r => {
             const isI = r[1] === '收入';
             const val = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
             list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div class="record-info"><span class="record-title">${r[3]} <small style="background:#E6E2DD; padding:2px 6px; border-radius:4px;">${r[4]}</small></span><span class="record-detail">${r[0]} | ${r[6]||'無'}</span></div><div class="record-amount" style="color:${isI?'#6B8E6B':'#C87A7E'}">${isI?'+':'-'}${val.toLocaleString()}</div></div>`;
