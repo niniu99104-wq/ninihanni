@@ -8,12 +8,9 @@
         body { font-family: "微軟正黑體", sans-serif; background-color: #F7F4F0; color: #5C544E; max-width: 480px; margin: 0 auto; padding: 20px; }
         .container { background: #FFFFFF; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(184, 174, 166, 0.2); }
         h2 { text-align: center; color: #8B7355; margin-top: 0; font-weight: 600; letter-spacing: 2px; }
-        
-        /* 帳本切換開關 */
         .ledger-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #E6E2DD; }
         .ledger-tab { flex: 1; text-align: center; padding: 12px; background: #FCFBF9; cursor: pointer; font-weight: bold; color: #8C847D; transition: 0.3s; }
         .ledger-tab.active { background: #8B7355; color: white; }
-
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
         input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
@@ -21,18 +18,12 @@
         button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: 0.2s; }
         button:hover { background-color: #735F46; }
         button:disabled { background-color: #D3CBC3; }
-        
         .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .radio-btn { flex: 1; text-align: center; padding: 10px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
         .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
         .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
-
         .balance-box { font-size: 20px; font-weight: bold; text-align: center; margin: 15px 0; color: #5C544E; background: #F7F4F0; padding: 15px; border-radius: 8px; }
-
-        .list-header { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        .delete-btn { width: auto; padding: 6px 12px; margin: 0; background-color: transparent; color: #C87A7E; border: 1px solid #C87A7E; font-size: 12px; border-radius: 6px; }
-        .delete-btn:hover { background-color: #C87A7E; color: white; }
-        
+        #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
         .record-item { background: #FCFBF9; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
         .record-expense { border-left-color: #C87A7E; }
         .record-income { border-left-color: #6B8E6B; }
@@ -40,57 +31,27 @@
         .record-title { font-weight: bold; font-size: 16px; }
         .record-detail { font-size: 13px; color: #8C847D; }
         .record-amount { font-size: 18px; font-weight: bold; }
-        .amount-expense { color: #C87A7E; }
-        .amount-income { color: #6B8E6B; }
-        #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>☘️霓要記得記帳</h2>
-
     <div class="ledger-tabs">
         <div class="ledger-tab active" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
         <div class="ledger-tab" id="tab-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</div>
     </div>
-    
     <div class="radio-group">
         <div class="radio-btn active-expense" id="btn-expense" onclick="setType('支出')">支出</div>
         <div class="radio-btn" id="btn-income" onclick="setType('收入')">收入</div>
     </div>
-
     <form id="form">
-        <div class="form-group">
-            <label>日期</label>
-            <input type="date" id="date" required>
-        </div>
-
-        <div class="form-group" id="subTypeGroup">
-            <label>類型</label>
-            <select id="subType" onchange="updateCategories()"></select>
-        </div>
-
-        <div class="form-group">
-            <label>類別</label>
-            <select id="category" required></select>
-        </div>
-
-        <div class="form-group" id="accountGroup">
-            <label>帳戶來源</label>
-            <select id="account" required></select>
-        </div>
-
-        <div class="form-group">
-            <label>金額</label>
-            <input type="text" inputmode="numeric" id="amount" placeholder="輸入數字" required>
-        </div>
-
-        <div class="form-group">
-            <label>備註 (選填)</label>
-            <input type="text" id="note" placeholder="寫點什麼...">
-        </div>
-
+        <div class="form-group"><label>日期</label><input type="date" id="date" required></div>
+        <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
+        <div class="form-group"><label>類別</label><select id="category" required></select></div>
+        <div class="form-group"><label>帳戶來源</label><select id="account" required></select></div>
+        <div class="form-group"><label>金額</label><input type="text" inputmode="numeric" id="amount" placeholder="輸入數字" required></div>
+        <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
         <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
 </div>
@@ -98,21 +59,13 @@
 <div class="container" style="margin-top: 20px;">
     <div class="balance-box" id="box-twd">台幣結餘: <span id="twdBalance" style="color:#8B7355;">0</span> 元</div>
     <div class="balance-box" id="box-krw" style="display:none;">批發網結餘: <span id="krwBalance" style="color:#8B7355;">0</span> 點</div>
-
-    <div class="list-header">
-        <h3 style="color:#8B7355; margin:0;">最新紀錄</h3>
-        <button class="delete-btn" id="deleteBtn" onclick="deleteLastRecord()">刪除最新一筆</button>
-    </div>
     <div id="loading">連線同步中...</div>
     <div id="recordList" style="margin-top: 15px;"></div>
 </div>
 
 <script>
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
-    
-    let currentType = '支出';
-    let currentLedger = 'TWD';
-    let globalData = [];
+    let currentType = '支出', currentLedger = 'TWD', globalData = [];
     document.getElementById('date').valueAsDate = new Date();
 
     const categoryMap = {
@@ -129,100 +82,60 @@
     };
 
     const accountMap = {
-        '支出': ['現金', '信用卡', '藍新待撥款', '批發網點數', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'],
-        '收入': ['現金', '藍新待撥款', '批發網點數', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)']
+        '支出': ['現金', '信用卡', 'Line Pay', 'iPass Money', '藍新待撥款', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'],
+        '收入': ['現金', 'Line Pay', 'iPass Money', '藍新待撥款', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)']
     };
 
-    function setLedger(ledger) {
-        currentLedger = ledger;
-        document.getElementById('tab-twd').className = ledger === 'TWD' ? 'ledger-tab active' : 'ledger-tab';
-        document.getElementById('tab-krw').className = ledger === 'KRW' ? 'ledger-tab active' : 'ledger-tab';
-        
-        document.getElementById('box-twd').style.display = ledger === 'TWD' ? 'block' : 'none';
-        document.getElementById('box-krw').style.display = ledger === 'KRW' ? 'block' : 'none';
-
-        setType('支出'); 
-        renderList();    
-    }
-
-    function setType(type) {
-        currentType = type;
-        document.getElementById('btn-expense').className = type === '支出' ? 'radio-btn active-expense' : 'radio-btn';
-        document.getElementById('btn-income').className = type === '收入' ? 'radio-btn active-income' : 'radio-btn';
-        
-        if (currentLedger === 'TWD') {
-            document.getElementById('subTypeGroup').style.display = 'block';
-            document.getElementById('subType').innerHTML = type === '支出' ? 
-                `<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出">選品支出</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>` : 
-                `<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`;
-            
-            document.getElementById('account').innerHTML = accountMap[type].map(a => `<option value="${a}">${a}</option>`).join('');
-            
-            updateCategories();
-        } else {
-            document.getElementById('subTypeGroup').style.display = 'none';
-            document.getElementById('category').innerHTML = type === '支出' ? '<option value="代理下單">代理下單</option>' : '<option value="儲值">儲值</option>';
-            document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>';
-        }
-    }
-
-    function updateCategories() {
-        if (currentLedger === 'KRW') return; 
-        const subType = document.getElementById('subType').value;
-        const catSelect = document.getElementById('category');
-        if (categoryMap[subType]) {
-            catSelect.innerHTML = categoryMap[subType].map(c => `<option value="${c}">${c}</option>`).join('');
-        }
-    }
+    function setLedger(l) { currentLedger = l; setType('支出'); renderList(); document.getElementById('tab-twd').className = l==='TWD'?'ledger-tab active':'ledger-tab'; document.getElementById('tab-krw').className = l==='KRW'?'ledger-tab active':'ledger-tab'; document.getElementById('box-twd').style.display = l==='TWD'?'block':'none'; document.getElementById('box-krw').style.display = l==='KRW'?'block':'none'; }
+    function setType(t) { currentType = t; if(currentLedger === 'TWD'){ document.getElementById('subTypeGroup').style.display='block'; document.getElementById('subType').innerHTML = t==='支出'?`<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出">選品支出</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>`:`<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`; document.getElementById('account').innerHTML = accountMap[t].map(a=>`<option value="${a}">${a}</option>`).join(''); updateCategories(); }else{ document.getElementById('subTypeGroup').style.display='none'; document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>'; document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>'; } }
+    function updateCategories() { if(currentLedger==='KRW')return; const s=document.getElementById('subType').value; if(categoryMap[s]) document.getElementById('category').innerHTML = categoryMap[s].map(c=>`<option value="${c}">${c}</option>`).join(''); }
     
-    setLedger('TWD'); 
+    setLedger('TWD');
+    fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
 
-    fetch(GOOGLE_API_URL).then(res => res.json()).then(data => {
-        globalData = data;
-        renderList();
-    }).catch(err => console.log('讀取失敗'));
-
-    document.getElementById('form').addEventListener('submit', function(e) {
+    document.getElementById('form').addEventListener('submit', async function(e) {
         e.preventDefault();
+        const amtStr = document.getElementById('amount').value.replace(/\D/g,'');
+        if (!amtStr) { alert('請輸入數字喔！'); return; }
+        const amt = parseInt(amtStr);
+        const note = document.getElementById('note').value;
+        const sub = currentLedger==='KRW'?'批發網(韓幣)':document.getElementById('subType').value;
+        const cat = document.getElementById('category').value;
+        const acc = document.getElementById('account').value;
+        const date = document.getElementById('date').value;
+
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
-        
-        const date = document.getElementById('date').value;
-        const subType = currentLedger === 'KRW' ? '批發網(韓幣)' : document.getElementById('subType').value;
-        const category = document.getElementById('category').value;
-        const account = document.getElementById('account').value;
-        
-        const amountStr = document.getElementById('amount').value.replace(/[^0-9]/g, '');
-        if (!amountStr) {
-            alert('請輸入正確的數字喔！');
-            return;
-        }
-
-        const note = document.getElementById('note').value || '-';
-        const amountNum = parseInt(amountStr);
-
         btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
 
-        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&subType=${subType}&category=${category}&account=${account}&amount=${amountNum}&note=${note}`;
+        const sendReq = async (d, t, st, c, a, am, n) => {
+            const url = `${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${n}`;
+            const res = await fetch(url);
+            return await res.json();
+        };
 
-        fetch(submitUrl).then(res => res.json()).then(data => {
-            globalData = data;
-            renderList();
-            document.getElementById('amount').value = '';
-            document.getElementById('note').value = '';
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
-
-            // 藍新手續費自動計算與提示
-            if (category === '藍新沖銷') {
-                const fee = Math.round(amountNum * 0.028);
-                const net = amountNum - fee;
-                alert(`幫妳算好了！總額 ${amountNum} 元\n👉 手續費：${fee} 元\n👉 實際入帳：${net} 元\n\n別忘了去「收入」補記一筆 ${net} 元到銀行帳戶，並把 ${fee} 元記在手續費支出喔！`);
+        try {
+            // 自動判斷藍新手續費
+            if (acc === '藍新待撥款' && currentType === '收入') {
+                const fee = Math.round(amt * 0.028);
+                const net = amt - fee;
+                
+                // 第一筆排隊：實收
+                await sendReq(date, '收入', sub, cat, acc, net, note);
+                // 第二筆排隊：手續費 (強制將分類改成 選品支出)
+                globalData = await sendReq(date, '支出', '選品支出', '手續費', acc, fee, `(藍新2.8%手續費)${note}`);
+                
+                alert(`藍新自動拆帳完畢：實收 ${net} + 手續費 ${fee}`);
+            } else {
+                globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
             }
-
-        }).catch(err => {
-            alert('連線失敗，請檢查網址');
+            renderList();
+            document.getElementById('amount').value=''; document.getElementById('note').value='';
+        } catch(err) {
+            alert('連線失敗，請檢查網路狀態');
+        } finally {
             btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
-        });
+        }
     });
 
     function deleteLastRecord() {
@@ -230,67 +143,26 @@
         const btn = document.getElementById('deleteBtn');
         const loading = document.getElementById('loading');
         btn.disabled = true; loading.style.display = 'block'; btn.innerText = '刪除中...';
-
-        fetch(`${GOOGLE_API_URL}?action=deleteLast`).then(res => res.json()).then(data => {
-            globalData = data;
-            renderList();
+        fetch(`${GOOGLE_API_URL}?action=deleteLast`).then(r=>r.json()).then(data=>{
+            globalData=data; renderList();
             btn.disabled = false; loading.style.display = 'none'; btn.innerText = '刪除最新一筆';
-        }).catch(err => {
-            alert('刪除失敗，請檢查網址');
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '刪除最新一筆';
-        });
+        }).catch(err=>{ alert('刪除失敗'); btn.disabled=false; loading.style.display='none'; btn.innerText='刪除最新一筆'; });
     }
 
     function renderList() {
-        const recordList = document.getElementById('recordList');
-        recordList.innerHTML = '';
-        let twdBal = 0;
-        let krwBal = 0;
-
-        globalData.forEach(row => {
-            const isIncome = row[1] === '收入';
-            const cleanAmount = String(row[5]).replace(/[^0-9]/g, '');
-            const amount = parseInt(cleanAmount) || 0;
-            
-            if (row[2] === '批發網(韓幣)') {
-                krwBal += isIncome ? amount : -amount;
-            } else {
-                twdBal += isIncome ? amount : -amount;
-            }
+        const list = document.getElementById('recordList'); list.innerHTML = '';
+        let tB = 0, kB = 0;
+        globalData.forEach(r => {
+            const isI = r[1] === '收入', am = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
+            if(r[2]==='批發網(韓幣)') kB += isI?am:-am; else tB += isI?am:-am;
         });
-
-        document.getElementById('twdBalance').innerText = twdBal.toLocaleString();
-        document.getElementById('krwBalance').innerText = krwBal.toLocaleString();
-
-        const filteredData = globalData.filter(row => {
-            if (currentLedger === 'KRW') return row[2] === '批發網(韓幣)';
-            return row[2] !== '批發網(韓幣)';
-        });
-
-        if (filteredData.length === 0) {
-            recordList.innerHTML = '<div style="text-align:center; color:#8C847D;">目前還沒有紀錄喔</div>';
-            return;
-        }
-
-        filteredData.slice(0, 10).forEach(row => {
-            const isIncome = row[1] === '收入';
-            const cleanAmount = String(row[5]).replace(/[^0-9]/g, '');
-            const displayAmount = parseInt(cleanAmount) || 0;
-
-            recordList.innerHTML += `
-                <div class="record-item ${isIncome ? 'record-income' : 'record-expense'}">
-                    <div class="record-info">
-                        <span class="record-title">${row[3]} <span style="font-weight:normal; font-size:12px; background:#E6E2DD; padding:2px 6px; border-radius:4px;">${row[4]}</span></span>
-                        <span class="record-detail">${row[0]} | ${row[6] !== '-' ? row[6] : '無備註'}</span>
-                    </div>
-                    <div class="record-amount ${isIncome ? 'amount-income' : 'amount-expense'}">
-                        ${isIncome ? '+' : '-'}${displayAmount.toLocaleString()}
-                    </div>
-                </div>
-            `;
+        document.getElementById('twdBalance').innerText = tB.toLocaleString();
+        document.getElementById('krwBalance').innerText = kB.toLocaleString();
+        globalData.filter(r => currentLedger==='KRW'?r[2]==='批發網(韓幣)':r[2]!=='批發網(韓幣)').slice(0,10).forEach(r => {
+            const isI = r[1] === '收入';
+            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div class="record-info"><span class="record-title">${r[3]} <small style="background:#E6E2DD; padding:2px 6px; border-radius:4px;">${r[4]}</small></span><span class="record-detail">${r[0]} | ${r[6]||'無備註'}</span></div><div class="record-amount" style="color:${isI?'#6B8E6B':'#C87A7E'}">${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</div></div>`;
         });
     }
 </script>
-
 </body>
 </html>
