@@ -26,7 +26,6 @@
         .record-item { background: #FCFBF9; border-radius: 12px; padding: 12px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
         .record-expense { border-left-color: #C87A7E; }
         .record-income { border-left-color: #6B8E6B; }
-        .edit-btn { background: #E6E2DD; color: #5C544E; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -47,8 +46,8 @@
         <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
         
         <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
-            <label style="color:#5C6B73;">📦 物流方式</label>
-            <select id="logistics" onchange="autoFillAmount()">
+            <label style="color:#5C6B73;">📦 物流方式 (將記錄於備註)</label>
+            <select id="logistics">
                 <option value="賣貨便">賣貨便</option>
                 <option value="店到店">店到店</option>
                 <option value="郵局配送">郵局配送</option>
@@ -71,7 +70,6 @@
         </div>
 
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
-        <input type="hidden" id="editRowId" value="">
         <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
 </div>
@@ -126,30 +124,21 @@
     function updateAccounts() {
         const cat = document.getElementById('category').value;
         const isES = (cat === 'EasyStore 訂單');
+        const isLogi = (currentType === '支出' && (cat === '國內運費' || cat === '運費'));
+
         document.getElementById('mainAmountLabel').innerText = isES ? "商品金額" : "金額";
         document.getElementById('creditGroup').style.display = isES ? 'block' : 'none';
         document.getElementById('esShippingGroup').style.display = isES ? 'block' : 'none';
-        document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
+        document.getElementById('logisticsGroup').style.display = isLogi ? 'block' : 'none';
 
         let list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         if (isES) list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         else if (cat === '記事本收款') list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
         else if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
         else if (cat === '活動購物金') list = ['ES購物金'];
-        else if (cat === '斷貨退款') list = ['ES購物金', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
 
         list.sort((a, b) => a.length - b.length);
         document.getElementById('account').innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
-        autoFillAmount();
-    }
-
-    function autoFillAmount() {
-        const amtInput = document.getElementById('amount');
-        if (document.getElementById('logisticsGroup').style.display === 'block') {
-            const logi = document.getElementById('logistics').value;
-            if (logi === '賣貨便') amtInput.value = '38';
-            else if (logi === '店到店') amtInput.value = '60';
-        }
     }
     
     fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
@@ -177,25 +166,20 @@
         try {
             if (currentType === '收入' && cat === 'EasyStore 訂單') {
                 const paidAmt = itemAmt + shipAmt - creditAmt;
-                const finalNote = `[商${itemAmt}/運${shipAmt}/折${creditAmt}] ${note}`;
-
-                // 1. 記實際付款 (藍新/銀行)
-                await sendReq(date, '收入', sub, cat, acc, paidAmt, finalNote);
-                // 2. 記購物金部分 (ES購物金)
-                if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數沖銷)${finalNote}`);
-                // 3. 記手續費 (僅限藍新)
-                if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%手續費)${finalNote}`);
-                
+                const esNote = `[商${itemAmt}/運${shipAmt}/折${creditAmt}] ${note}`;
+                await sendReq(date, '收入', sub, cat, acc, paidAmt, esNote);
+                if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數回收)${esNote}`);
+                if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%手續費)${esNote}`);
                 globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
-                alert(`搞定！實收${paidAmt} + 購物金${creditAmt} = 總額${itemAmt+shipAmt}`);
+                alert(`紀錄完畢！實收${paidAmt}`);
             } else {
-                globalData = await sendReq(date, currentType, sub, cat, acc, itemAmt, note);
+                let finalNote = note;
+                if (document.getElementById('logisticsGroup').style.display === 'block') {
+                    finalNote = `[${document.getElementById('logistics').value}] ${note}`;
+                }
+                globalData = await sendReq(date, currentType, sub, cat, acc, itemAmt, finalNote);
             }
-            renderList(); 
-            document.getElementById('amount').value=''; 
-            document.getElementById('creditAmount').value=''; 
-            document.getElementById('esShippingAmount').value='';
-            document.getElementById('note').value='';
+            renderList(); document.getElementById('amount').value=''; document.getElementById('creditAmount').value=''; document.getElementById('esShippingAmount').value=''; document.getElementById('note').value='';
         } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; }
     });
 
