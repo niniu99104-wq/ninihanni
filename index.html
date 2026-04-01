@@ -58,15 +58,16 @@
         </div>
 
         <div class="form-group"><label>帳戶來源</label><select id="account" required></select></div>
-        <div class="form-group"><label id="mainAmountLabel">金額 (總實收)</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
         
-        <div class="form-group" id="creditGroup" style="display:none; background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4; margin-bottom:15px;">
+        <div class="form-group"><label id="mainAmountLabel">金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
+        
+        <div class="form-group" id="creditGroup" style="display:none; background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;">
             <label style="color:#D48806;">✨ 使用購物金金額</label>
             <input type="text" inputmode="numeric" id="creditAmount" placeholder="沒用就留空">
         </div>
-        <div class="form-group" id="esShippingGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2; margin-bottom:15px;">
-            <label style="color:#5C6B73;">📦 客人預付運費 (純紀錄，不自動扣款)</label>
-            <input type="text" inputmode="numeric" id="esShippingAmount" placeholder="客人付的運費 (如: 60)">
+        <div class="form-group" id="esShippingGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
+            <label style="color:#5C6B73;">📦 客人預付運費</label>
+            <input type="text" inputmode="numeric" id="esShippingAmount" placeholder="如: 60">
         </div>
 
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
@@ -77,7 +78,6 @@
 
 <div class="container" style="margin-top: 20px;">
     <div class="balance-box" id="box-twd">台幣結餘: <span id="twdBalance" style="color:#8B7355;">0</span> 元</div>
-    <div class="balance-box" id="box-krw" style="display:none;">批發網結餘: <span id="krwBalance" style="color:#8B7355;">0</span> 點</div>
     <div id="loading">連線同步中...</div>
     <div id="recordList" style="margin-top: 15px;"></div>
 </div>
@@ -106,37 +106,17 @@
         }
     };
 
-    function setLedger(l) { 
-        currentLedger = l; 
-        setType('支出'); 
-        renderList(); 
-        document.getElementById('tab-twd').className = l==='TWD'?'ledger-tab active':'ledger-tab'; 
-        document.getElementById('tab-krw').className = l==='KRW'?'ledger-tab active':'ledger-tab'; 
-        document.getElementById('box-twd').style.display = l==='TWD'?'block':'none'; 
-        document.getElementById('box-krw').style.display = l==='KRW'?'block':'none'; 
-    }
-
+    function setLedger(l) { currentLedger = l; setType('支出'); renderList(); }
     function setType(t) { 
         currentType = t; 
         document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn';
         document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn';
-        document.getElementById('amount').className = t==='支出'?'input-expense':'input-income';
-        if (currentLedger === 'TWD') {
-            document.getElementById('subTypeGroup').style.display='block';
-            const subs = Object.keys(categoryMap[t]);
-            document.getElementById('subType').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
-            updateCategories(); 
-        } else {
-            document.getElementById('subTypeGroup').style.display='none';
-            document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>';
-            document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>';
-            document.getElementById('creditGroup').style.display = 'none';
-            document.getElementById('esShippingGroup').style.display = 'none';
-        }
+        const subs = Object.keys(categoryMap[t]);
+        document.getElementById('subType').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+        updateCategories(); 
     }
 
     function updateCategories() {
-        if (currentLedger === 'KRW') return;
         const sub = document.getElementById('subType').value;
         const cats = categoryMap[currentType][sub];
         document.getElementById('category').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -144,11 +124,9 @@
     }
 
     function updateAccounts() {
-        if (currentLedger === 'KRW') return;
         const cat = document.getElementById('category').value;
-        const accSelect = document.getElementById('account');
         const isES = (cat === 'EasyStore 訂單');
-
+        document.getElementById('mainAmountLabel').innerText = isES ? "商品金額" : "金額";
         document.getElementById('creditGroup').style.display = isES ? 'block' : 'none';
         document.getElementById('esShippingGroup').style.display = isES ? 'block' : 'none';
         document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
@@ -161,7 +139,7 @@
         else if (cat === '斷貨退款') list = ['ES購物金', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
 
         list.sort((a, b) => a.length - b.length);
-        accSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
+        document.getElementById('account').innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
         autoFillAmount();
     }
 
@@ -173,33 +151,16 @@
             else if (logi === '店到店') amtInput.value = '60';
         }
     }
-
-    function editRecord(rowIdx) {
-        const r = globalData[rowIdx];
-        document.getElementById('date').value = r[0];
-        setType(r[1]);
-        setTimeout(() => {
-            document.getElementById('subType').value = r[2];
-            updateCategories();
-            document.getElementById('category').value = r[3];
-            updateAccounts();
-            document.getElementById('account').value = r[4];
-            document.getElementById('amount').value = r[5];
-            document.getElementById('note').value = r[6];
-            document.getElementById('submitBtn').innerText = "確認修改 (會刪除舊紀錄)";
-            document.getElementById('editRowId').value = r[7];
-        }, 100);
-    }
     
     fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
 
     document.getElementById('form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const amt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
+        const itemAmt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
         const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
-        const esShippingAmt = parseInt(document.getElementById('esShippingAmount').value.replace(/\D/g,'')) || 0;
+        const shipAmt = parseInt(document.getElementById('esShippingAmount').value.replace(/\D/g,'')) || 0;
         const note = document.getElementById('note').value;
-        const sub = currentLedger === 'KRW' ? '批發網(韓幣)' : document.getElementById('subType').value;
+        const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
         const acc = document.getElementById('account').value;
         const date = document.getElementById('date').value;
@@ -215,65 +176,41 @@
 
         try {
             if (currentType === '收入' && cat === 'EasyStore 訂單') {
-                // 將運費純紀錄在備註裡
-                let finalNote = note;
-                if (esShippingAmt > 0) {
-                    finalNote = note ? `[含運費${esShippingAmt}] ${note}` : `[含運費${esShippingAmt}]`;
-                }
+                const paidAmt = itemAmt + shipAmt - creditAmt;
+                const finalNote = `[商${itemAmt}/運${shipAmt}/折${creditAmt}] ${note}`;
 
-                // 1. 記總實收收入 (含運費標籤)
-                await sendReq(date, '收入', sub, cat, acc, amt, finalNote);
+                // 1. 記實際付款 (藍新/銀行)
+                await sendReq(date, '收入', sub, cat, acc, paidAmt, finalNote);
+                // 2. 記購物金部分 (ES購物金)
+                if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數沖銷)${finalNote}`);
+                // 3. 記手續費 (僅限藍新)
+                if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%手續費)${finalNote}`);
                 
-                // 2. 記購物金回收收入 (有填寫才記)
-                if (creditAmt > 0) {
-                    await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(訂單扣抵)${finalNote}`);
-                }
-                
-                // 3. 記刷卡手續費支出 (只扣藍新)
-                if (acc === '藍新待撥款') {
-                    await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%手續費)${finalNote}`);
-                }
-                
-                // 重新抓取資料更新畫面
                 globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
-                alert(`搞定！實收${amt} / 購物金${creditAmt}。運費已記在備註中！`);
-                
+                alert(`搞定！實收${paidAmt} + 購物金${creditAmt} = 總額${itemAmt+shipAmt}`);
             } else {
-                let finalNote = note;
-                if (currentType === '支出' && (cat === '國內運費' || cat === '運費')) {
-                    const logi = document.getElementById('logistics').value;
-                    finalNote = note ? `[${logi}] ${note}` : `[${logi}]`;
-                }
-                globalData = await sendReq(date, currentType, sub, cat, acc, amt, finalNote);
-                if (document.getElementById('submitBtn').innerText.includes("修改")) {
-                    alert("修正成功。");
-                    document.getElementById('submitBtn').innerText = "記錄一筆";
-                }
+                globalData = await sendReq(date, currentType, sub, cat, acc, itemAmt, note);
             }
             renderList(); 
             document.getElementById('amount').value=''; 
             document.getElementById('creditAmount').value=''; 
-            document.getElementById('esShippingAmount').value=''; 
+            document.getElementById('esShippingAmount').value='';
             document.getElementById('note').value='';
         } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; }
     });
 
     function renderList() {
         const list = document.getElementById('recordList'); list.innerHTML = '';
-        let tB = 0, kB = 0;
+        let tB = 0;
         if (!Array.isArray(globalData)) return;
-        globalData.forEach(r => { 
-            const isI = r[1] === '收入';
-            const val = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
-            if (r[2] === '批發網(韓幣)') kB += isI ? val : -val; else tB += isI ? val : -val;
-        });
+        globalData.forEach(r => { if(r[1]==='收入') tB += parseInt(r[5]); else tB -= parseInt(r[5]); });
         document.getElementById('twdBalance').innerText = tB.toLocaleString();
-        document.getElementById('krwBalance').innerText = kB.toLocaleString();
-        globalData.filter(r => currentLedger === 'KRW' ? r[2] === '批發網(韓幣)' : r[2] !== '批發網(韓幣)').slice(0,15).forEach((r, idx) => {
+        globalData.slice(0,15).forEach(r => {
             const isI = r[1] === '收入';
-            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div><b>${r[3]}</b> <small>${r[4]}</small><br><span style="font-size:12px">${r[0]} | ${r[6]||'無'}</span></div><div style="text-align:right"><b>${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</b><br><button class="edit-btn" onclick="editRecord(${idx})">🖊️ 改</button></div></div>`;
+            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div><b>${r[3]}</b> <small>${r[4]}</small><br><span style="font-size:12px">${r[0]} | ${r[6]||''}</span></div><div style="color:${isI?'#6B8E6B':'#C87A7E'}"><b>${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</b></div></div>`;
         });
     }
+    setType('支出');
 </script>
 </body>
 </html>
