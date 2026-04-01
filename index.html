@@ -152,8 +152,8 @@
                 `<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`;
             
             document.getElementById('account').innerHTML = type === '支出' ? 
-                ['現金', '銀行轉帳', '信用卡', 'Line Pay', 'iPass Money'].map(a => `<option value="${a}">${a}</option>`).join('') : 
-                ['現金', '中信 (銀行轉帳)', '台新 (銀行轉帳)', 'Line Pay', 'iPass Money'].map(a => `<option value="${a}">${a}</option>`).join('');
+                ['現金', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)', '信用卡', 'Line Pay', 'iPass Money'].map(a => `<option value="${a}">${a}</option>`).join('') : 
+                ['現金', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)', 'Line Pay', 'iPass Money'].map(a => `<option value="${a}">${a}</option>`).join('');
             
             updateCategories();
         } else {
