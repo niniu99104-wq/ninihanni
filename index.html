@@ -14,14 +14,21 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
         input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
-        input:focus, select:focus { border-color: #C0A991; }
+        
+        /* 動態邊框顏色 */
+        .input-expense:focus { border-color: #C87A7E !important; }
+        .input-income:focus { border-color: #6B8E6B !important; }
+
         button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: 0.2s; }
         button:hover { background-color: #735F46; }
         button:disabled { background-color: #D3CBC3; }
+
+        /* 收入支出按鈕變色核心 */
         .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .radio-btn { flex: 1; text-align: center; padding: 10px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
-        .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
-        .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
+        .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; background: #FCFBF9; }
+        .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; box-shadow: 0 4px 10px rgba(200, 122, 126, 0.3); }
+        .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; box-shadow: 0 4px 10px rgba(107, 142, 107, 0.3); }
+
         .balance-box { font-size: 20px; font-weight: bold; text-align: center; margin: 15px 0; color: #5C544E; background: #F7F4F0; padding: 15px; border-radius: 8px; }
         #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
         .record-item { background: #FCFBF9; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
@@ -50,7 +57,7 @@
         <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
         <div class="form-group"><label>類別</label><select id="category" required></select></div>
         <div class="form-group"><label>帳戶來源</label><select id="account" required></select></div>
-        <div class="form-group"><label>金額</label><input type="text" inputmode="numeric" id="amount" placeholder="輸入數字" required></div>
+        <div class="form-group"><label>金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
         <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
@@ -87,7 +94,35 @@
     };
 
     function setLedger(l) { currentLedger = l; setType('支出'); renderList(); document.getElementById('tab-twd').className = l==='TWD'?'ledger-tab active':'ledger-tab'; document.getElementById('tab-krw').className = l==='KRW'?'ledger-tab active':'ledger-tab'; document.getElementById('box-twd').style.display = l==='TWD'?'block':'none'; document.getElementById('box-krw').style.display = l==='KRW'?'block':'none'; }
-    function setType(t) { currentType = t; if(currentLedger === 'TWD'){ document.getElementById('subTypeGroup').style.display='block'; document.getElementById('subType').innerHTML = t==='支出'?`<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出">選品支出</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>`:`<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`; document.getElementById('account').innerHTML = accountMap[t].map(a=>`<option value="${a}">${a}</option>`).join(''); updateCategories(); }else{ document.getElementById('subTypeGroup').style.display='none'; document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>'; document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>'; } }
+    
+    function setType(t) { 
+        currentType = t; 
+        const btnExp = document.getElementById('btn-expense');
+        const btnInc = document.getElementById('btn-income');
+        const amtInp = document.getElementById('amount');
+
+        if(t === '支出') {
+            btnExp.classList.add('active-expense');
+            btnInc.classList.remove('active-income');
+            amtInp.className = 'input-expense';
+        } else {
+            btnInc.classList.add('active-income');
+            btnExp.classList.remove('active-expense');
+            amtInp.className = 'input-income';
+        }
+
+        if(currentLedger === 'TWD'){ 
+            document.getElementById('subTypeGroup').style.display='block'; 
+            document.getElementById('subType').innerHTML = t==='支出'?`<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出">選品支出</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>`:`<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`; 
+            document.getElementById('account').innerHTML = accountMap[t].map(a=>`<option value="${a}">${a}</option>`).join(''); 
+            updateCategories(); 
+        }else{ 
+            document.getElementById('subTypeGroup').style.display='none'; 
+            document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>'; 
+            document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>'; 
+        } 
+    }
+
     function updateCategories() { if(currentLedger==='KRW')return; const s=document.getElementById('subType').value; if(categoryMap[s]) document.getElementById('category').innerHTML = categoryMap[s].map(c=>`<option value="${c}">${c}</option>`).join(''); }
     
     setLedger('TWD');
@@ -115,16 +150,11 @@
         };
 
         try {
-            // 自動判斷藍新手續費
             if (acc === '藍新待撥款' && currentType === '收入') {
                 const fee = Math.round(amt * 0.028);
                 const net = amt - fee;
-                
-                // 第一筆排隊：實收
                 await sendReq(date, '收入', sub, cat, acc, net, note);
-                // 第二筆排隊：手續費 (強制將分類改成 選品支出)
                 globalData = await sendReq(date, '支出', '選品支出', '手續費', acc, fee, `(藍新2.8%手續費)${note}`);
-                
                 alert(`藍新自動拆帳完畢：實收 ${net} + 手續費 ${fee}`);
             } else {
                 globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
@@ -137,17 +167,6 @@
             btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
         }
     });
-
-    function deleteLastRecord() {
-        if (!confirm('確定要刪除試算表裡最新的一筆紀錄嗎？')) return;
-        const btn = document.getElementById('deleteBtn');
-        const loading = document.getElementById('loading');
-        btn.disabled = true; loading.style.display = 'block'; btn.innerText = '刪除中...';
-        fetch(`${GOOGLE_API_URL}?action=deleteLast`).then(r=>r.json()).then(data=>{
-            globalData=data; renderList();
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '刪除最新一筆';
-        }).catch(err=>{ alert('刪除失敗'); btn.disabled=false; loading.style.display='none'; btn.innerText='刪除最新一筆'; });
-    }
 
     function renderList() {
         const list = document.getElementById('recordList'); list.innerHTML = '';
