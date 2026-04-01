@@ -14,30 +14,20 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
         input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
-        
-        /* 動態邊框顏色 */
         .input-expense:focus { border-color: #C87A7E !important; }
         .input-income:focus { border-color: #6B8E6B !important; }
-
         button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 1px; transition: 0.2s; }
         button:hover { background-color: #735F46; }
         button:disabled { background-color: #D3CBC3; }
-
-        /* 收入支出按鈕變色核心 */
         .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; background: #FCFBF9; }
-        .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; box-shadow: 0 4px 10px rgba(200, 122, 126, 0.3); }
-        .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; box-shadow: 0 4px 10px rgba(107, 142, 107, 0.3); }
-
+        .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
+        .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
         .balance-box { font-size: 20px; font-weight: bold; text-align: center; margin: 15px 0; color: #5C544E; background: #F7F4F0; padding: 15px; border-radius: 8px; }
         #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
         .record-item { background: #FCFBF9; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
         .record-expense { border-left-color: #C87A7E; }
         .record-income { border-left-color: #6B8E6B; }
-        .record-info { display: flex; flex-direction: column; gap: 4px; }
-        .record-title { font-weight: bold; font-size: 16px; }
-        .record-detail { font-size: 13px; color: #8C847D; }
-        .record-amount { font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -57,7 +47,7 @@
         <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
         <div class="form-group"><label>類別</label><select id="category" required></select></div>
         <div class="form-group"><label>帳戶來源</label><select id="account" required></select></div>
-        <div class="form-group"><label>金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
+        <div class="form-group"><label>金額 (刷卡/轉帳總額)</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入總額" required></div>
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
         <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
@@ -97,19 +87,9 @@
     
     function setType(t) { 
         currentType = t; 
-        const btnExp = document.getElementById('btn-expense');
-        const btnInc = document.getElementById('btn-income');
-        const amtInp = document.getElementById('amount');
-
-        if(t === '支出') {
-            btnExp.classList.add('active-expense');
-            btnInc.classList.remove('active-income');
-            amtInp.className = 'input-expense';
-        } else {
-            btnInc.classList.add('active-income');
-            btnExp.classList.remove('active-expense');
-            amtInp.className = 'input-income';
-        }
+        document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn';
+        document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn';
+        document.getElementById('amount').className = t==='支出'?'input-expense':'input-income';
 
         if(currentLedger === 'TWD'){ 
             document.getElementById('subTypeGroup').style.display='block'; 
@@ -141,7 +121,7 @@
 
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
-        btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
+        btn.disabled = true; loading.style.display = 'block';
 
         const sendReq = async (d, t, st, c, a, am, n) => {
             const url = `${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${n}`;
@@ -150,21 +130,43 @@
         };
 
         try {
-            if (acc === '藍新待撥款' && currentType === '收入') {
-                const fee = Math.round(amt * 0.028);
-                const net = amt - fee;
-                await sendReq(date, '收入', sub, cat, acc, net, note);
-                globalData = await sendReq(date, '支出', '選品支出', '手續費', acc, fee, `(藍新2.8%手續費)${note}`);
-                alert(`藍新自動拆帳完畢：實收 ${net} + 手續費 ${fee}`);
+            if (currentType === '收入' && cat === 'EasyStore 訂單') {
+                let shippingFee = 0;
+                if (amt < 1500) {
+                    const mode = confirm("這單未滿$1500，請問有收運費嗎？\n[確定]：收$60(超商)\n[取消]：收$100(宅配)");
+                    shippingFee = mode ? 60 : 100;
+                } else if (amt < 2000) {
+                    const mode = confirm("這單滿$1500未滿$2000：\n[確定]：超商免運 ($0)\n[取消]：宅配加收 ($100)");
+                    shippingFee = mode ? 0 : 100;
+                }
+
+                // 1. 先記原始總業績 (進藍新待撥款或銀行)
+                await sendReq(date, '收入', sub, cat, acc, amt, note);
+
+                // 2. 如果是刷卡，用「原始金額」算手續費
+                if (acc === '藍新待撥款') {
+                    const fee = Math.round(amt * 0.028);
+                    await sendReq(date, '支出', '選品支出', '手續費', acc, fee, `(藍新2.8%手續費)${note}`);
+                }
+
+                // 3. 處理運費 (從帳戶扣除運費支出)
+                if (shippingFee > 0) {
+                    globalData = await sendReq(date, '支出', '選品支出', '運費', acc, shippingFee, `(官網運費)${note}`);
+                    alert(`會計對帳完成：總額 ${amt}，已扣手續費(僅限藍新)與運費 ${shippingFee}`);
+                } else {
+                    // 若無運費，也要刷新列表
+                    globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
+                    alert(`對帳完成：總額 ${amt} 入帳。`);
+                }
             } else {
                 globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
             }
             renderList();
             document.getElementById('amount').value=''; document.getElementById('note').value='';
         } catch(err) {
-            alert('連線失敗，請檢查網路狀態');
+            alert('連線失敗');
         } finally {
-            btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
+            btn.disabled = false; loading.style.display = 'none';
         }
     });
 
@@ -179,7 +181,7 @@
         document.getElementById('krwBalance').innerText = kB.toLocaleString();
         globalData.filter(r => currentLedger==='KRW'?r[2]==='批發網(韓幣)':r[2]!=='批發網(韓幣)').slice(0,10).forEach(r => {
             const isI = r[1] === '收入';
-            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div class="record-info"><span class="record-title">${r[3]} <small style="background:#E6E2DD; padding:2px 6px; border-radius:4px;">${r[4]}</small></span><span class="record-detail">${r[0]} | ${r[6]||'無備註'}</span></div><div class="record-amount" style="color:${isI?'#6B8E6B':'#C87A7E'}">${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</div></div>`;
+            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div class="record-info"><span class="record-title">${r[3]} <small style="background:#E6E2DD; padding:2px 6px; border-radius:4px;">${r[4]}</small></span><span class="record-detail">${r[0]} | ${r[6]||'無'}</span></div><div class="record-amount" style="color:${isI?'#6B8E6B':'#C87A7E'}">${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</div></div>`;
         });
     }
 </script>
