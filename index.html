@@ -8,15 +8,21 @@
         body { font-family: "微軟正黑體", sans-serif; background-color: #F7F4F0; color: #5C544E; max-width: 480px; margin: 0 auto; padding: 20px; }
         .container { background: #FFFFFF; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(184, 174, 166, 0.2); }
         h2 { text-align: center; color: #8B7355; margin-top: 0; font-weight: 600; letter-spacing: 2px; }
+        
         .ledger-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #E6E2DD; }
         .ledger-tab { flex: 1; text-align: center; padding: 12px; background: #FCFBF9; cursor: pointer; font-weight: bold; color: #8C847D; transition: 0.3s; }
-        .ledger-tab.active { background: #8B7355; color: white; }
+        
+        /* 這裡就是變色的魔法 */
+        .ledger-tab.active-twd { background: #8B7355; color: white; } /* 台幣奶茶色 */
+        .ledger-tab.active-krw { background: #5C6B73; color: white; } /* 韓幣莫蘭迪藍 */
+        
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
         input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
         .input-expense:focus { border-color: #C87A7E !important; }
         .input-income:focus { border-color: #6B8E6B !important; }
         button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
         .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
         .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
@@ -28,7 +34,7 @@
 <div class="container">
     <h2>☘️霓要記得記帳</h2>
     <div class="ledger-tabs">
-        <div class="ledger-tab active" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
+        <div class="ledger-tab active-twd" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
         <div class="ledger-tab" id="tab-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</div>
     </div>
     <div class="radio-group">
@@ -77,13 +83,20 @@
         },
         '收入': {
             '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
-            '甜點收入': ['實體門市', '私訊訂購', '表單訂購'],
+            '甜點收入': ['實體門市', '私訊訂購', '表單訂購', 'PAYUNi 入帳'],
             '選品收入 (零售)': ['現貨出清', '記事本收款', 'EasyStore 訂單'],
             '代理收入 (批發)': ['倉庫整理費', '代墊款回收', '國際運費收回', '國內運費收回']
         }
     };
 
-    function setLedger(l) { currentLedger = l; setType('支出'); }
+    function setLedger(l) { 
+        currentLedger = l; 
+        // 變色按鈕觸發
+        document.getElementById('tab-twd').className = l === 'TWD' ? 'ledger-tab active-twd' : 'ledger-tab';
+        document.getElementById('tab-krw').className = l === 'KRW' ? 'ledger-tab active-krw' : 'ledger-tab';
+        setType('支出'); 
+    }
+    
     function setType(t) { 
         currentType = t; 
         document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn';
@@ -112,8 +125,12 @@
         if (currentLedger === 'KRW') return;
         const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
+        const isES = (cat === 'EasyStore 訂單');
+        const isPayUni = (cat === 'PAYUNi 入帳');
+
         let list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        if (cat === 'EasyStore 訂單') list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        if (isPayUni) list = ['銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        else if (isES) list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         else if (cat === '記事本收款') list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
         else if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
         else if (cat === '活動購物金') list = ['ES購物金'];
@@ -126,13 +143,12 @@
 
     function updateFields() {
         const cat = document.getElementById('category').value;
-        const sub = document.getElementById('subType').value;
         const isES = (cat === 'EasyStore 訂單');
-        const isSweet = (sub === '甜點收入' && currentType === '收入');
+        const isPayUni = (cat === 'PAYUNi 入帳');
         document.getElementById('esFields').style.display = isES ? 'block' : 'none';
-        document.getElementById('payuniAutoFields').style.display = isSweet ? 'block' : 'none';
+        document.getElementById('payuniAutoFields').style.display = isPayUni ? 'block' : 'none';
         document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
-        document.getElementById('mainAmountLabel').innerText = isSweet ? "銀行實收金額" : (isES ? "商品原價" : "金額");
+        document.getElementById('mainAmountLabel').innerText = isPayUni ? "銀行實收金額" : (isES ? "商品原價" : "金額");
     }
 
     document.getElementById('form').addEventListener('submit', async function(e) {
@@ -152,8 +168,8 @@
         const send = async (d, t, st, c, a, am, n) => { await fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${encodeURIComponent(n)}`); };
 
         try {
-            if (currentType === '收入' && sub === '甜點收入') {
-                const estFee = Math.round(mainAmt * 0.02); // 自動估算 2%
+            if (cat === 'PAYUNi 入帳') {
+                const estFee = Math.round(mainAmt * 0.02);
                 const totalIncome = mainAmt + pShip + estFee;
                 const splitNote = `[PAYUNi撥款實結: 實收${mainAmt}/扣運${pShip}/估手續${estFee}] ${note}`;
                 await send(date, '收入', sub, cat, acc, totalIncome, splitNote);
@@ -170,7 +186,7 @@
                 if (document.getElementById('logisticsGroup').style.display === 'block') finalNote = `[${document.getElementById('logistics').value}] ${note}`;
                 await send(date, currentType, sub, cat, acc, mainAmt, finalNote);
             }
-            alert("搞定！手續費已依 2% 估算補登。"); location.reload();
+            alert("好了！顏色跟邏輯通通改好了！"); location.reload();
         } catch (err) { alert("失敗"); } finally { btn.disabled = false; }
     });
     setLedger('TWD');
