@@ -163,7 +163,7 @@
                 if (document.getElementById('logisticsGroup').style.display === 'block') finalNote = `[${document.getElementById('logistics').value}] ${note}`;
                 await send(date, currentType, sub, cat, acc, mainAmt, finalNote);
             }
-            alert("搞定！收工！"); location.reload();
+            alert("輸入完畢！下一筆！"); location.reload();
         } catch (err) { alert("失敗"); } finally { btn.disabled = false; }
     });
     setLedger('TWD');
