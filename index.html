@@ -85,8 +85,6 @@
         }
     };
 
-    const cashBank = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-
     function setLedger(l) { currentLedger = l; setType('支出'); renderList(); }
     function setType(t) { 
         currentType = t; 
@@ -106,95 +104,35 @@
     }
 
     function updateAccounts() {
-        const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
         const accSelect = document.getElementById('account');
         const creditGroup = document.getElementById('creditGroup');
         let list = [];
 
+        // 控制購物金輸入框顯示
         creditGroup.style.display = (cat === 'EasyStore 訂單') ? 'block' : 'none';
 
-        // 極致隔離邏輯
+        // 絕對隔離邏輯
         if (cat === 'EasyStore 訂單') {
-            list = ['ES購物金', '藍新待撥款'];
-        } else if (cat === '藍新沖銷') {
-            list = ['銀行轉帳 (中國信託)'];
-        } else if (cat === '活動購物金' || cat === '斷貨退款') {
-            list = ['ES購物金', '批發網點數'];
+            list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else if (cat === '記事本收款') {
             list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
-        } else if (['運費', '手續費', '國際運費', '國內運費'].includes(cat)) {
-            // 運費支出：解鎖物流管道 + 基本銀行
-            list = ['賣貨便', '店到店', '郵局配送', '新竹物流(小物)', ...cashBank];
+        } else if (cat === '藍新沖銷') {
+            list = ['銀行轉帳 (中國信託)'];
+        } else if (cat === '活動購物金') {
+            list = ['ES購物金'];
+        } else if (cat === '斷貨退款') {
+            list = ['ES購物金', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        } else if (['運費', '國際運費', '國內運費'].includes(cat)) {
+            list = ['現金', '賣貨便', '店到店', '郵局配送', '新竹物流(小物)', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        } else if (cat === '手續費') {
+            list = ['現金', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        } else if (cat === '選品進貨') {
+            list = ['現金', '信用卡', 'Line Pay', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else {
-            // 一般生活開銷
-            list = cashBank;
+            // 一般生活開銷與預設
+            list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         }
 
-        list.sort((a, b) => a.length - b.length);
-        accSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
-        autoFillAmount();
-    }
-
-    function autoFillAmount() {
-        const acc = document.getElementById('account').value;
-        if (acc === '賣貨便') document.getElementById('amount').value = '38';
-        else if (acc === '店到店') document.getElementById('amount').value = '60';
-    }
-    
-    fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
-
-    document.getElementById('form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const amt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
-        const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
-        const note = document.getElementById('note').value;
-        const sub = document.getElementById('subType').value;
-        const cat = document.getElementById('category').value;
-        const acc = document.getElementById('account').value;
-        const date = document.getElementById('date').value;
-        const btn = document.getElementById('submitBtn');
-        const loading = document.getElementById('loading');
-
-        btn.disabled = true; loading.style.display = 'block';
-
-        const sendReq = async (d, t, st, c, a, am, n) => {
-            const res = await fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${n}`);
-            return await res.json();
-        };
-
-        try {
-            if (currentType === '收入' && cat === 'EasyStore 訂單') {
-                const totalAmt = amt + creditAmt;
-                let sf = 0;
-                if (totalAmt < 1500) sf = confirm("總額未滿$1500，扣運費嗎？\n[確定]$60 / [取消]$100") ? 60 : 100;
-                else if (totalAmt < 2000) sf = confirm("總額滿$1500未滿$2000：\n[確定]超取免運 / [取消]宅配$100") ? 0 : 100;
-
-                await sendReq(date, '收入', sub, cat, acc, amt, note);
-                if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(訂單扣抵)${note}`);
-                if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%)${note}`);
-                if (sf > 0) globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `(官網運費)${note}`);
-                else globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
-                alert(`搞定！實收${amt} + 購物金${creditAmt}`);
-            } else {
-                globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
-            }
-            renderList(); document.getElementById('amount').value=''; document.getElementById('creditAmount').value=''; document.getElementById('note').value='';
-        } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; }
-    });
-
-    function renderList() {
-        const list = document.getElementById('recordList'); list.innerHTML = '';
-        let tB = 0;
-        if (!Array.isArray(globalData)) return;
-        globalData.forEach(r => { if(r[1]==='收入') tB += parseInt(r[5]); else tB -= parseInt(r[5]); });
-        document.getElementById('twdBalance').innerText = tB.toLocaleString();
-        globalData.slice(0,15).forEach(r => {
-            const isI = r[1] === '收入';
-            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div><b>${r[3]}</b> <small>${r[4]}</small><br><small>${r[0]} | ${r[6]||''}</small></div><div style="color:${isI?'#6B8E6B':'#C87A7E'}"><b>${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</b></div></div>`;
-        });
-    }
-    setType('支出');
-</script>
-</body>
-</html>
+        // 確保字數由少到多排序
+        list.sort((a, b) => a
