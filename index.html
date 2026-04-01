@@ -44,7 +44,19 @@
         <div class="form-group"><label>日期</label><input type="date" id="date" required></div>
         <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
         <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
-        <div class="form-group"><label>帳戶來源</label><select id="account" required onchange="autoFillAmount()"></select></div>
+        
+        <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
+            <label style="color:#5C6B73;">📦 物流方式</label>
+            <select id="logistics" onchange="autoFillAmount()">
+                <option value="賣貨便">賣貨便</option>
+                <option value="店到店">店到店</option>
+                <option value="郵局配送">郵局配送</option>
+                <option value="新竹物流(小物)">新竹物流(小物)</option>
+                <option value="新竹物流(大件)">新竹物流(大件)</option>
+            </select>
+        </div>
+
+        <div class="form-group"><label>帳戶來源</label><select id="account" required></select></div>
         <div class="form-group"><label id="mainAmountLabel">金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
         <div class="form-group" id="creditGroup" style="display:none; background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;">
             <label style="color:#D48806;">✨ 使用購物金金額</label>
@@ -73,7 +85,7 @@
             '固定支出': ['房租', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '水費/電費', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
             '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
             '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
-            '選品支出 (零售)': ['運費', '手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'],
+            '選品支出 (零售)': ['手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'], // 刪除了原本的運費
             '代理支出 (批發)': ['代墊款', '斷貨退款', '國際運費', '國內運費', '批發儲值(台幣)'],
             '其他支出': ['其他']
         },
@@ -112,6 +124,7 @@
             document.getElementById('category').innerHTML = t==='支出'?'<option value="代理下單">代理下單</option>':'<option value="儲值">儲值</option>';
             document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>';
             document.getElementById('creditGroup').style.display = 'none';
+            document.getElementById('logisticsGroup').style.display = 'none';
         }
     }
 
@@ -128,12 +141,20 @@
         const cat = document.getElementById('category').value;
         const accSelect = document.getElementById('account');
         const creditGroup = document.getElementById('creditGroup');
+        const logisticsGroup = document.getElementById('logisticsGroup');
         let list = [];
 
-        // 控制購物金輸入框顯示
+        // 控制購物金顯示
         creditGroup.style.display = (cat === 'EasyStore 訂單') ? 'block' : 'none';
 
-        // 絕對隔離邏輯
+        // 控制獨立物流框顯示
+        if (currentType === '支出' && cat === '國內運費') {
+            logisticsGroup.style.display = 'block';
+        } else {
+            logisticsGroup.style.display = 'none';
+        }
+
+        // 絕對隔離帳戶邏輯 (不含物流選項了)
         if (cat === 'EasyStore 訂單') {
             list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else if (cat === '記事本收款') {
@@ -144,14 +165,12 @@
             list = ['ES購物金'];
         } else if (cat === '斷貨退款') {
             list = ['ES購物金', '批發網點數', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        } else if (['運費', '國際運費', '國內運費'].includes(cat)) {
-            list = ['現金', '賣貨便', '店到店', '郵局配送', '新竹物流(小物)', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else if (cat === '手續費') {
             list = ['現金', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else if (cat === '選品進貨') {
             list = ['現金', '信用卡', 'Line Pay', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else {
-            // 一般生活開銷與預設
+            // 一般生活開銷、運費付款等預設錢包
             list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         }
 
@@ -162,11 +181,15 @@
     }
 
     function autoFillAmount() {
-        const acc = document.getElementById('account').value;
+        const logisticsGroup = document.getElementById('logisticsGroup');
         const amtInput = document.getElementById('amount');
-        if (acc === '賣貨便') amtInput.value = '38';
-        else if (acc === '店到店') amtInput.value = '60';
-        else if (amtInput.value === '38' || amtInput.value === '60') amtInput.value = '';
+        
+        if (logisticsGroup.style.display === 'block') {
+            const logi = document.getElementById('logistics').value;
+            if (logi === '賣貨便') amtInput.value = '38';
+            else if (logi === '店到店') amtInput.value = '60';
+            else if (amtInput.value === '38' || amtInput.value === '60') amtInput.value = '';
+        }
     }
     
     // 初始化 TWD
@@ -202,11 +225,17 @@
                 await sendReq(date, '收入', sub, cat, acc, amt, note);
                 if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(訂單扣抵)${note}`);
                 if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%)${note}`);
-                if (sf > 0) globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `(官網運費)${note}`);
+                if (sf > 0) globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `[官網自動運費]${note}`);
                 else globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
                 alert(`紀錄完畢！實收${amt} + 購物金${creditAmt}`);
             } else {
-                globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
+                let finalNote = note;
+                // 如果是手動記國內運費，把物流方式塞進備註裡，這樣試算表才看得到
+                if (currentType === '支出' && cat === '國內運費') {
+                    const logi = document.getElementById('logistics').value;
+                    finalNote = note ? `[${logi}] ${note}` : `[${logi}]`;
+                }
+                globalData = await sendReq(date, currentType, sub, cat, acc, amt, finalNote);
             }
             renderList(); document.getElementById('amount').value=''; document.getElementById('creditAmount').value=''; document.getElementById('note').value='';
         } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; }
