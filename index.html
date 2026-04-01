@@ -17,8 +17,6 @@
         .input-expense:focus { border-color: #C87A7E !important; }
         .input-income:focus { border-color: #6B8E6B !important; }
         button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:disabled { background-color: #D3CBC3; cursor: not-allowed; }
-        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
         .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
         .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
@@ -42,30 +40,19 @@
         <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
         <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
         
-        <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
-            <label style="color:#5C6B73;">📦 物流標籤 (自動加入備註)</label>
-            <select id="logistics">
-                <option value="賣貨便">賣貨便</option>
-                <option value="店到店">店到店</option>
-                <option value="郵局配送">郵局配送</option>
-                <option value="新竹物流(小物)">新竹物流(小物)</option>
-                <option value="新竹物流(大件)">新竹物流(大件)</option>
-            </select>
-        </div>
+        <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;"><label style="color:#5C6B73;">📦 物流標籤</label><select id="logistics"><option value="賣貨便">賣貨便</option><option value="店到店">店到店</option><option value="郵局配送">郵局配送</option><option value="新竹物流(小物)">新竹物流(小物)</option><option value="新竹物流(大件)">新竹物流(大件)</option></select></div>
 
-        <div class="form-group"><label>帳戶來源</label><select id="account" required></select></div>
-        
+        <div class="form-group"><label>帳戶來源</label><select id="account" required onchange="updateFields()"></select></div>
         <div class="form-group"><label id="mainAmountLabel">金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
         
         <div id="esFields" style="display:none;">
-            <div class="form-group" style="background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;">
-                <label style="color:#D48806;">✨ 使用購物金金額</label>
-                <input type="text" inputmode="numeric" id="creditAmount" placeholder="沒用就留空">
-            </div>
-            <div class="form-group" style="background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
-                <label style="color:#5C6B73;">📦 客人預付運費</label>
-                <input type="text" inputmode="numeric" id="esShippingAmount" placeholder="沒付就留空">
-            </div>
+            <div class="form-group" style="background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;"><label style="color:#D48806;">✨ 使用購物金</label><input type="text" inputmode="numeric" id="creditAmount"></div>
+            <div class="form-group" style="background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;"><label style="color:#5C6B73;">📦 預付運費</label><input type="text" inputmode="numeric" id="shippingAmount"></div>
+        </div>
+
+        <div id="payuniAutoFields" style="display:none; background:#F8F4F0; padding:10px; border-radius:8px; border:1px dashed #8B7355;">
+            <div class="form-group"><label style="color:#8B7355;">📦 帳面總扣運費 (支出)</label><input type="text" inputmode="numeric" id="payuniShip"></div>
+            <p style="font-size:12px; color:#8B7355;">※ 手續費會依「實收」自動估算 2% 記帳</p>
         </div>
 
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
@@ -76,8 +63,7 @@
 
 <script>
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
-    let currentType = '支出';
-    let currentLedger = 'TWD';
+    let currentType = '支出', currentLedger = 'TWD';
     document.getElementById('date').valueAsDate = new Date();
 
     const categoryMap = {
@@ -97,19 +83,11 @@
         }
     };
 
-    function setLedger(l) {
-        currentLedger = l;
-        document.getElementById('tab-twd').className = l === 'TWD' ? 'ledger-tab active' : 'ledger-tab';
-        document.getElementById('tab-krw').className = l === 'KRW' ? 'ledger-tab active' : 'ledger-tab';
-        setType('支出');
-    }
-
+    function setLedger(l) { currentLedger = l; setType('支出'); }
     function setType(t) { 
         currentType = t; 
         document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn';
         document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn';
-        document.getElementById('amount').className = t==='支出'?'input-expense':'input-income';
-        
         if (currentLedger === 'TWD') {
             document.getElementById('subTypeGroup').style.display = 'block';
             const subs = Object.keys(categoryMap[t]);
@@ -117,11 +95,8 @@
             updateCategories(); 
         } else {
             document.getElementById('subTypeGroup').style.display = 'none';
-            document.getElementById('esFields').style.display = 'none';
-            document.getElementById('logisticsGroup').style.display = 'none';
             document.getElementById('category').innerHTML = t === '支出' ? '<option value="代理下單">代理下單</option>' : '<option value="儲值">儲值</option>';
             document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>';
-            document.getElementById('mainAmountLabel').innerText = "金額 (韓幣)";
         }
     }
 
@@ -137,79 +112,67 @@
         if (currentLedger === 'KRW') return;
         const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
-        const isES = (cat === 'EasyStore 訂單');
-        
-        document.getElementById('mainAmountLabel').innerText = isES ? "商品金額" : "金額";
-        document.getElementById('esFields').style.display = isES ? 'block' : 'none';
-        document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
-
         let list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        
-        if (isES) {
-            list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        } else if (cat === '記事本收款') {
-            list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
-        } else if (cat === '藍新沖銷') {
-            list = ['銀行轉帳 (中國信託)'];
-        } else if (cat === '活動購物金') {
-            list = ['ES購物金'];
-        }
+        if (cat === 'EasyStore 訂單') list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        else if (cat === '記事本收款') list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
+        else if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
+        else if (cat === '活動購物金') list = ['ES購物金'];
 
-        // 代理批發專屬：強制拔除信用卡
-        if (sub.includes('代理')) {
-            list = list.filter(item => item !== '信用卡');
-        }
-
+        if (sub.includes('代理')) list = list.filter(i => i !== '信用卡');
         list.sort((a, b) => a.length - b.length);
         document.getElementById('account').innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
+        updateFields();
+    }
+
+    function updateFields() {
+        const cat = document.getElementById('category').value;
+        const sub = document.getElementById('subType').value;
+        const isES = (cat === 'EasyStore 訂單');
+        const isSweet = (sub === '甜點收入' && currentType === '收入');
+        document.getElementById('esFields').style.display = isES ? 'block' : 'none';
+        document.getElementById('payuniAutoFields').style.display = isSweet ? 'block' : 'none';
+        document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
+        document.getElementById('mainAmountLabel').innerText = isSweet ? "銀行實收金額" : (isES ? "商品原價" : "金額");
     }
 
     document.getElementById('form').addEventListener('submit', async function(e) {
         e.preventDefault();
         const mainAmt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
         const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
-        const shipAmt = parseInt(document.getElementById('esShippingAmount').value.replace(/\D/g,'')) || 0;
+        const shipAmt = parseInt(document.getElementById('shippingAmount').value.replace(/\D/g,'')) || 0;
+        const pShip = parseInt(document.getElementById('payuniShip').value.replace(/\D/g,'')) || 0;
         let note = document.getElementById('note').value;
         const sub = currentLedger === 'KRW' ? '批發網(韓幣)' : document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
         const acc = document.getElementById('account').value;
         const date = document.getElementById('date').value;
         const btn = document.getElementById('submitBtn');
-        const loading = document.getElementById('loading');
 
-        btn.disabled = true; loading.style.display = 'block';
-
-        const send = async (d, t, st, c, a, am, n) => {
-            const url = `${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${encodeURIComponent(n)}`;
-            await fetch(url);
-        };
+        btn.disabled = true; document.getElementById('loading').style.display = 'block';
+        const send = async (d, t, st, c, a, am, n) => { await fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${encodeURIComponent(n)}`); };
 
         try {
-            if (currentLedger === 'TWD' && currentType === '收入' && cat === 'EasyStore 訂單') {
+            if (currentType === '收入' && sub === '甜點收入') {
+                const estFee = Math.round(mainAmt * 0.02); // 自動估算 2%
+                const totalIncome = mainAmt + pShip + estFee;
+                const splitNote = `[PAYUNi撥款實結: 實收${mainAmt}/扣運${pShip}/估手續${estFee}] ${note}`;
+                await send(date, '收入', sub, cat, acc, totalIncome, splitNote);
+                if (pShip > 0) await send(date, '支出', '甜點支出', '運費', acc, pShip, `(PAYUNi扣運)${note}`);
+                await send(date, '支出', '甜點支出', '手續費', acc, estFee, `(PAYUNi估手續)${note}`);
+            } else if (cat === 'EasyStore 訂單') {
                 const paidAmt = mainAmt + shipAmt - creditAmt;
                 const esNote = `[商${mainAmt}/運${shipAmt}/折${creditAmt}] ${note}`;
                 await send(date, '收入', sub, cat, acc, paidAmt, esNote);
-                if (creditAmt > 0) await send(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數回收)${esNote}`);
-                if (acc === '藍新待撥款') await send(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%)${esNote}`);
+                if (creditAmt > 0) await send(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數)${esNote}`);
+                if (acc === '藍新待撥款') await send(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%手續費)`);
             } else {
                 let finalNote = note;
-                if (currentLedger === 'TWD' && document.getElementById('logisticsGroup').style.display === 'block') {
-                    finalNote = `[${document.getElementById('logistics').value}] ${note}`;
-                }
+                if (document.getElementById('logisticsGroup').style.display === 'block') finalNote = `[${document.getElementById('logistics').value}] ${note}`;
                 await send(date, currentType, sub, cat, acc, mainAmt, finalNote);
             }
-            alert("紀錄成功！");
-            document.getElementById('amount').value = '';
-            document.getElementById('note').value = '';
-            document.getElementById('creditAmount').value = '';
-            document.getElementById('esShippingAmount').value = '';
-        } catch (err) {
-            alert("失敗了...請檢查網路或後台權限");
-        } finally {
-            btn.disabled = false; loading.style.display = 'none';
-        }
+            alert("搞定！手續費已依 2% 估算補登。"); location.reload();
+        } catch (err) { alert("失敗"); } finally { btn.disabled = false; }
     });
-
     setLedger('TWD');
 </script>
 </body>
