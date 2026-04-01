@@ -85,7 +85,7 @@
             '固定支出': ['房租', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '水費/電費', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
             '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
             '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
-            '選品支出 (零售)': ['手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'], // 刪除了原本的運費
+            '選品支出 (零售)': ['手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'],
             '代理支出 (批發)': ['代墊款', '斷貨退款', '國際運費', '國內運費', '批發儲值(台幣)'],
             '其他支出': ['其他']
         },
@@ -144,17 +144,15 @@
         const logisticsGroup = document.getElementById('logisticsGroup');
         let list = [];
 
-        // 控制購物金顯示
         creditGroup.style.display = (cat === 'EasyStore 訂單') ? 'block' : 'none';
 
-        // 控制獨立物流框顯示
-        if (currentType === '支出' && cat === '國內運費') {
+        // 運費選項皆會解鎖物流框
+        if (currentType === '支出' && (cat === '國內運費' || cat === '運費')) {
             logisticsGroup.style.display = 'block';
         } else {
             logisticsGroup.style.display = 'none';
         }
 
-        // 絕對隔離帳戶邏輯 (不含物流選項了)
         if (cat === 'EasyStore 訂單') {
             list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else if (cat === '記事本收款') {
@@ -170,11 +168,9 @@
         } else if (cat === '選品進貨') {
             list = ['現金', '信用卡', 'Line Pay', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         } else {
-            // 一般生活開銷、運費付款等預設錢包
             list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
         }
 
-        // 確保字數由少到多排序
         list.sort((a, b) => a.length - b.length);
         accSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
         autoFillAmount();
@@ -183,7 +179,6 @@
     function autoFillAmount() {
         const logisticsGroup = document.getElementById('logisticsGroup');
         const amtInput = document.getElementById('amount');
-        
         if (logisticsGroup.style.display === 'block') {
             const logi = document.getElementById('logistics').value;
             if (logi === '賣貨便') amtInput.value = '38';
@@ -192,7 +187,6 @@
         }
     }
     
-    // 初始化 TWD
     setLedger('TWD');
     fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
 
@@ -230,8 +224,7 @@
                 alert(`紀錄完畢！實收${amt} + 購物金${creditAmt}`);
             } else {
                 let finalNote = note;
-                // 如果是手動記國內運費，把物流方式塞進備註裡，這樣試算表才看得到
-                if (currentType === '支出' && cat === '國內運費') {
+                if (currentType === '支出' && (cat === '國內運費' || cat === '運費')) {
                     const logi = document.getElementById('logistics').value;
                     finalNote = note ? `[${logi}] ${note}` : `[${logi}]`;
                 }
@@ -245,20 +238,14 @@
         const list = document.getElementById('recordList'); list.innerHTML = '';
         let tB = 0, kB = 0;
         if (!Array.isArray(globalData)) return;
-        
         globalData.forEach(r => { 
             const isI = r[1] === '收入';
             const val = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
-            if (r[2] === '批發網(韓幣)') {
-                kB += isI ? val : -val;
-            } else {
-                tB += isI ? val : -val;
-            }
+            if (r[2] === '批發網(韓幣)') kB += isI ? val : -val;
+            else tB += isI ? val : -val;
         });
-        
         document.getElementById('twdBalance').innerText = tB.toLocaleString();
         document.getElementById('krwBalance').innerText = kB.toLocaleString();
-        
         globalData.filter(r => currentLedger === 'KRW' ? r[2] === '批發網(韓幣)' : r[2] !== '批發網(韓幣)').slice(0,15).forEach(r => {
             const isI = r[1] === '收入';
             const val = parseInt(String(r[5]).replace(/\D/g,'')) || 0;
