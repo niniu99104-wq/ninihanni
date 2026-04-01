@@ -135,4 +135,72 @@
         }
 
         // 確保字數由少到多排序
-        list.sort((a, b) => a
+        list.sort((a, b) => a.length - b.length);
+        accSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
+        autoFillAmount();
+    }
+
+    function autoFillAmount() {
+        const acc = document.getElementById('account').value;
+        const amtInput = document.getElementById('amount');
+        if (acc === '賣貨便') amtInput.value = '38';
+        else if (acc === '店到店') amtInput.value = '60';
+        else if (amtInput.value === '38' || amtInput.value === '60') amtInput.value = '';
+    }
+    
+    fetch(GOOGLE_API_URL).then(r=>r.json()).then(d=>{globalData=d; renderList();});
+
+    document.getElementById('form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const amt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
+        const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
+        const note = document.getElementById('note').value;
+        const sub = document.getElementById('subType').value;
+        const cat = document.getElementById('category').value;
+        const acc = document.getElementById('account').value;
+        const date = document.getElementById('date').value;
+        const btn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+
+        btn.disabled = true; loading.style.display = 'block';
+
+        const sendReq = async (d, t, st, c, a, am, n) => {
+            const res = await fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${n}`);
+            return await res.json();
+        };
+
+        try {
+            if (currentType === '收入' && cat === 'EasyStore 訂單') {
+                const totalAmt = amt + creditAmt;
+                let sf = 0;
+                if (totalAmt < 1500) sf = confirm("總額未滿$1500，扣運費嗎？\n[確定]$60 / [取消]$100") ? 60 : 100;
+                else if (totalAmt < 2000) sf = confirm("總額滿$1500未滿$2000：\n[確定]超取免運 / [取消]宅配$100") ? 0 : 100;
+
+                await sendReq(date, '收入', sub, cat, acc, amt, note);
+                if (creditAmt > 0) await sendReq(date, '收入', sub, cat, 'ES購物金', creditAmt, `(訂單扣抵)${note}`);
+                if (acc === '藍新待撥款') await sendReq(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(amt*0.028), `(2.8%)${note}`);
+                if (sf > 0) globalData = await sendReq(date, '支出', '選品支出 (零售)', '國內運費', acc, sf, `(官網運費)${note}`);
+                else globalData = await fetch(GOOGLE_API_URL).then(r=>r.json());
+                alert(`紀錄完畢！實收${amt} + 購物金${creditAmt}`);
+            } else {
+                globalData = await sendReq(date, currentType, sub, cat, acc, amt, note);
+            }
+            renderList(); document.getElementById('amount').value=''; document.getElementById('creditAmount').value=''; document.getElementById('note').value='';
+        } catch(err) { alert('連線失敗'); } finally { btn.disabled = false; loading.style.display = 'none'; }
+    });
+
+    function renderList() {
+        const list = document.getElementById('recordList'); list.innerHTML = '';
+        let tB = 0;
+        if (!Array.isArray(globalData)) return;
+        globalData.forEach(r => { if(r[1]==='收入') tB += parseInt(r[5]); else tB -= parseInt(r[5]); });
+        document.getElementById('twdBalance').innerText = tB.toLocaleString();
+        globalData.slice(0,15).forEach(r => {
+            const isI = r[1] === '收入';
+            list.innerHTML += `<div class="record-item ${isI?'record-income':'record-expense'}"><div><b>${r[3]}</b> <small>${r[4]}</small><br><small>${r[0]} | ${r[6]||''}</small></div><div style="color:${isI?'#6B8E6B':'#C87A7E'}"><b>${isI?'+':'-'}${parseInt(r[5]).toLocaleString()}</b></div></div>`;
+        });
+    }
+    setType('支出');
+</script>
+</body>
+</html>
