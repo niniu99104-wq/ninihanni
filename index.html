@@ -117,15 +117,20 @@
 
     const categoryMap = {
         '變動支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '加油', '搭車費', '線上購物', '實體購物'],
-        '固定支出': ['房租', '水費', '電費', '保險(小孩)', '保險(大人)', '汽機車牌照稅', '燃料費', '電信費', '瓦斯費', '債務還款', 'APP訂閱'],
-        '小孩支出': ['尿布', '娛樂', '健康', '學雜費'],
-        '選品支出': ['批發儲值(台幣)', '選品進貨', '運費', '手續費', '代墊款'],
-        '甜點支出': ['材料進貨', '包材進貨', '運費', '手續費'],
+        '固定支出': ['房租', '水費', '電費', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
+        '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
+        '選品支出': ['運費', '代墊款', '手續費', '藍新沖銷', '選品進貨', '批發儲值(台幣)'],
+        '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
         '其他支出': ['其他'],
         '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
-        '甜點收入': ['私訊訂購', '表單訂購', '實體門市'],
-        '選品收入': ['記事本收款', 'EasyStore 訂單', '代墊款回收'],
+        '甜點收入': ['實體門市', '私訊訂購', '表單訂購'],
+        '選品收入': ['記事本收款', '代墊款回收', 'EasyStore 訂單'],
         '其他收入': ['其他']
+    };
+
+    const accountMap = {
+        '支出': ['現金', '信用卡', '藍新待撥款', '批發網點數', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'],
+        '收入': ['現金', '藍新待撥款', '批發網點數', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)']
     };
 
     function setLedger(ledger) {
@@ -151,9 +156,7 @@
                 `<option value="變動支出">變動支出</option><option value="固定支出">固定支出</option><option value="小孩支出">小孩支出</option><option value="選品支出">選品支出</option><option value="甜點支出">甜點支出</option><option value="其他支出">其他支出</option>` : 
                 `<option value="個人收入">個人收入</option><option value="甜點收入">甜點收入</option><option value="選品收入">選品收入</option><option value="其他收入">其他收入</option>`;
             
-            document.getElementById('account').innerHTML = type === '支出' ? 
-                ['現金', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)', '信用卡', 'Line Pay', 'iPass Money'].map(a => `<option value="${a}">${a}</option>`).join('') : 
-                ['現金', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)', 'Line Pay', 'iPass Money'].map(a => `<option value="${a}">${a}</option>`).join('');
+            document.getElementById('account').innerHTML = accountMap[type].map(a => `<option value="${a}">${a}</option>`).join('');
             
             updateCategories();
         } else {
@@ -189,7 +192,6 @@
         const category = document.getElementById('category').value;
         const account = document.getElementById('account').value;
         
-        // 【拔除逗號】避免韓元大數字出包
         const amountStr = document.getElementById('amount').value.replace(/[^0-9]/g, '');
         if (!amountStr) {
             alert('請輸入正確的數字喔！');
@@ -197,10 +199,11 @@
         }
 
         const note = document.getElementById('note').value || '-';
+        const amountNum = parseInt(amountStr);
 
         btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
 
-        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&subType=${subType}&category=${category}&account=${account}&amount=${amountStr}&note=${note}`;
+        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&subType=${subType}&category=${category}&account=${account}&amount=${amountNum}&note=${note}`;
 
         fetch(submitUrl).then(res => res.json()).then(data => {
             globalData = data;
@@ -208,6 +211,14 @@
             document.getElementById('amount').value = '';
             document.getElementById('note').value = '';
             btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
+
+            // 藍新手續費自動計算與提示
+            if (category === '藍新沖銷') {
+                const fee = Math.round(amountNum * 0.028);
+                const net = amountNum - fee;
+                alert(`幫妳算好了！總額 ${amountNum} 元\n👉 手續費：${fee} 元\n👉 實際入帳：${net} 元\n\n別忘了去「收入」補記一筆 ${net} 元到銀行帳戶，並把 ${fee} 元記在手續費支出喔！`);
+            }
+
         }).catch(err => {
             alert('連線失敗，請檢查網址');
             btn.disabled = false; loading.style.display = 'none'; btn.innerText = '記錄一筆';
@@ -238,7 +249,6 @@
 
         globalData.forEach(row => {
             const isIncome = row[1] === '收入';
-            // 【拔除逗號】確保算結餘的時候不會因為試算表傳來的逗號當機
             const cleanAmount = String(row[5]).replace(/[^0-9]/g, '');
             const amount = parseInt(cleanAmount) || 0;
             
