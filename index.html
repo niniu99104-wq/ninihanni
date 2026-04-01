@@ -135,6 +135,7 @@
 
     function updateAccounts() {
         if (currentLedger === 'KRW') return;
+        const sub = document.getElementById('subType').value;
         const cat = document.getElementById('category').value;
         const isES = (cat === 'EasyStore 訂單');
         
@@ -143,10 +144,21 @@
         document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
 
         let list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        if (isES) list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        else if (cat === '記事本收款') list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
-        else if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
-        else if (cat === '活動購物金') list = ['ES購物金'];
+        
+        if (isES) {
+            list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        } else if (cat === '記事本收款') {
+            list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
+        } else if (cat === '藍新沖銷') {
+            list = ['銀行轉帳 (中國信託)'];
+        } else if (cat === '活動購物金') {
+            list = ['ES購物金'];
+        }
+
+        // 代理批發專屬：強制拔除信用卡
+        if (sub.includes('代理')) {
+            list = list.filter(item => item !== '信用卡');
+        }
 
         list.sort((a, b) => a.length - b.length);
         document.getElementById('account').innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
@@ -198,7 +210,6 @@
         }
     });
 
-    // 初始化狀態
     setLedger('TWD');
 </script>
 </body>
