@@ -83,7 +83,7 @@
 
         <div class="form-group">
             <label>金額</label>
-            <input type="number" id="amount" placeholder="輸入數字" required min="1">
+            <input type="text" inputmode="numeric" id="amount" placeholder="輸入數字" required>
         </div>
 
         <div class="form-group">
@@ -119,7 +119,7 @@
         '變動支出': ['早餐', '午餐', '晚餐', '點心', '宵夜', '飲料', '加油', '搭車費', '線上購物', '實體購物'],
         '固定支出': ['房租', '水費', '電費', '保險(小孩)', '保險(大人)', '汽機車牌照稅', '燃料費', '電信費', '瓦斯費', '債務還款', 'APP訂閱'],
         '小孩支出': ['尿布', '娛樂', '健康', '學雜費'],
-        '選品支出': ['批發儲值(台幣)', '選品進貨', '運費', '手續費', '代墊款'], // 加了儲值台幣
+        '選品支出': ['批發儲值(台幣)', '選品進貨', '運費', '手續費', '代墊款'],
         '甜點支出': ['材料進貨', '包材進貨', '運費', '手續費'],
         '其他支出': ['其他'],
         '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
@@ -136,8 +136,8 @@
         document.getElementById('box-twd').style.display = ledger === 'TWD' ? 'block' : 'none';
         document.getElementById('box-krw').style.display = ledger === 'KRW' ? 'block' : 'none';
 
-        setType('支出'); // 切換帳本時預設回到支出
-        renderList();    // 刷新下方列表
+        setType('支出'); 
+        renderList();    
     }
 
     function setType(type) {
@@ -164,7 +164,7 @@
     }
 
     function updateCategories() {
-        if (currentLedger === 'KRW') return; // 韓幣不用連動
+        if (currentLedger === 'KRW') return; 
         const subType = document.getElementById('subType').value;
         const catSelect = document.getElementById('category');
         if (categoryMap[subType]) {
@@ -172,7 +172,7 @@
         }
     }
     
-    setLedger('TWD'); // 初始載入台幣帳本
+    setLedger('TWD'); 
 
     fetch(GOOGLE_API_URL).then(res => res.json()).then(data => {
         globalData = data;
@@ -185,16 +185,22 @@
         const loading = document.getElementById('loading');
         
         const date = document.getElementById('date').value;
-        // 如果是韓幣，後台寫入固定的標記，方便分開算
         const subType = currentLedger === 'KRW' ? '批發網(韓幣)' : document.getElementById('subType').value;
         const category = document.getElementById('category').value;
         const account = document.getElementById('account').value;
-        const amount = document.getElementById('amount').value;
+        
+        // 【拔除逗號】避免韓元大數字出包
+        const amountStr = document.getElementById('amount').value.replace(/[^0-9]/g, '');
+        if (!amountStr) {
+            alert('請輸入正確的數字喔！');
+            return;
+        }
+
         const note = document.getElementById('note').value || '-';
 
         btn.disabled = true; loading.style.display = 'block'; btn.innerText = '寫入中...';
 
-        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&subType=${subType}&category=${category}&account=${account}&amount=${amount}&note=${note}`;
+        const submitUrl = `${GOOGLE_API_URL}?action=add&date=${date}&type=${currentType}&subType=${subType}&category=${category}&account=${account}&amount=${amountStr}&note=${note}`;
 
         fetch(submitUrl).then(res => res.json()).then(data => {
             globalData = data;
@@ -230,10 +236,12 @@
         let twdBal = 0;
         let krwBal = 0;
 
-        // 計算兩個帳本的總結餘
         globalData.forEach(row => {
             const isIncome = row[1] === '收入';
-            const amount = parseInt(row[5]) || 0;
+            // 【拔除逗號】確保算結餘的時候不會因為試算表傳來的逗號當機
+            const cleanAmount = String(row[5]).replace(/[^0-9]/g, '');
+            const amount = parseInt(cleanAmount) || 0;
+            
             if (row[2] === '批發網(韓幣)') {
                 krwBal += isIncome ? amount : -amount;
             } else {
@@ -244,7 +252,6 @@
         document.getElementById('twdBalance').innerText = twdBal.toLocaleString();
         document.getElementById('krwBalance').innerText = krwBal.toLocaleString();
 
-        // 根據現在切換的帳本，過濾要顯示的紀錄
         const filteredData = globalData.filter(row => {
             if (currentLedger === 'KRW') return row[2] === '批發網(韓幣)';
             return row[2] !== '批發網(韓幣)';
@@ -257,6 +264,9 @@
 
         filteredData.slice(0, 10).forEach(row => {
             const isIncome = row[1] === '收入';
+            const cleanAmount = String(row[5]).replace(/[^0-9]/g, '');
+            const displayAmount = parseInt(cleanAmount) || 0;
+
             recordList.innerHTML += `
                 <div class="record-item ${isIncome ? 'record-income' : 'record-expense'}">
                     <div class="record-info">
@@ -264,7 +274,7 @@
                         <span class="record-detail">${row[0]} | ${row[6] !== '-' ? row[6] : '無備註'}</span>
                     </div>
                     <div class="record-amount ${isIncome ? 'amount-income' : 'amount-expense'}">
-                        ${isIncome ? '+' : '-'}${parseInt(row[5]).toLocaleString()}
+                        ${isIncome ? '+' : '-'}${displayAmount.toLocaleString()}
                     </div>
                 </div>
             `;
