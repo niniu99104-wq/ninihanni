@@ -11,21 +11,36 @@
         
         .ledger-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #E6E2DD; }
         .ledger-tab { flex: 1; text-align: center; padding: 12px; background: #FCFBF9; cursor: pointer; font-weight: bold; color: #8C847D; transition: 0.3s; }
-        
-        /* 這裡就是變色的魔法 */
-        .ledger-tab.active-twd { background: #8B7355; color: white; } /* 台幣奶茶色 */
-        .ledger-tab.active-krw { background: #5C6B73; color: white; } /* 韓幣莫蘭迪藍 */
+        .ledger-tab.active-twd { background: #8B7355; color: white; }
+        .ledger-tab.active-krw { background: #5C6B73; color: white; }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
-        input, select { width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; }
+        
+        /* 強制統一所有輸入框高度與排版，解決 iOS 日期歪斜 */
+        input, select { 
+            width: 100%; 
+            height: 48px; 
+            padding: 0 12px; 
+            box-sizing: border-box; 
+            border: 1px solid #E6E2DD; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            background-color: #FCFBF9; 
+            color: #5C544E; 
+            outline: none; 
+            font-family: inherit;
+        }
         .input-expense:focus { border-color: #C87A7E !important; }
         .input-income:focus { border-color: #6B8E6B !important; }
-        button { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .radio-btn { flex: 1; text-align: center; padding: 12px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; }
+        
+        /* 支出與收入按鈕改為上下排放 */
+        .radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .radio-btn { width: 100%; text-align: center; padding: 14px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; box-sizing: border-box; }
         .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
         .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
+        
+        button[type="submit"] { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
     </style>
 </head>
@@ -37,10 +52,12 @@
         <div class="ledger-tab active-twd" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
         <div class="ledger-tab" id="tab-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</div>
     </div>
+    
     <div class="radio-group">
         <div class="radio-btn active-expense" id="btn-expense" onclick="setType('支出')">支出</div>
         <div class="radio-btn" id="btn-income" onclick="setType('收入')">收入</div>
     </div>
+    
     <form id="form">
         <div class="form-group"><label>日期</label><input type="date" id="date" required></div>
         <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
@@ -58,7 +75,7 @@
 
         <div id="payuniAutoFields" style="display:none; background:#F8F4F0; padding:10px; border-radius:8px; border:1px dashed #8B7355;">
             <div class="form-group"><label style="color:#8B7355;">📦 帳面總扣運費 (支出)</label><input type="text" inputmode="numeric" id="payuniShip"></div>
-            <p style="font-size:12px; color:#8B7355;">※ 手續費會依「實收」自動估算 2% 記帳</p>
+            <p style="font-size:12px; color:#8B7355; margin-top:5px; margin-bottom:0;">※ 手續費會依「實收」自動估算 2% 記帳</p>
         </div>
 
         <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
@@ -91,7 +108,6 @@
 
     function setLedger(l) { 
         currentLedger = l; 
-        // 變色按鈕觸發
         document.getElementById('tab-twd').className = l === 'TWD' ? 'ledger-tab active-twd' : 'ledger-tab';
         document.getElementById('tab-krw').className = l === 'KRW' ? 'ledger-tab active-krw' : 'ledger-tab';
         setType('支出'); 
@@ -129,11 +145,18 @@
         const isPayUni = (cat === 'PAYUNi 入帳');
 
         let list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        if (isPayUni) list = ['銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        else if (isES) list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        else if (cat === '記事本收款') list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
-        else if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
-        else if (cat === '活動購物金') list = ['ES購物金'];
+        
+        if (isPayUni) {
+            list = ['銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        } else if (isES) {
+            list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
+        } else if (cat === '記事本收款') {
+            list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
+        } else if (cat === '藍新沖銷') {
+            list = ['銀行轉帳 (中國信託)'];
+        } else if (cat === '活動購物金') {
+            list = ['ES購物金'];
+        }
 
         if (sub.includes('代理')) list = list.filter(i => i !== '信用卡');
         list.sort((a, b) => a.length - b.length);
@@ -145,6 +168,7 @@
         const cat = document.getElementById('category').value;
         const isES = (cat === 'EasyStore 訂單');
         const isPayUni = (cat === 'PAYUNi 入帳');
+        
         document.getElementById('esFields').style.display = isES ? 'block' : 'none';
         document.getElementById('payuniAutoFields').style.display = isPayUni ? 'block' : 'none';
         document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
@@ -186,7 +210,7 @@
                 if (document.getElementById('logisticsGroup').style.display === 'block') finalNote = `[${document.getElementById('logistics').value}] ${note}`;
                 await send(date, currentType, sub, cat, acc, mainAmt, finalNote);
             }
-            alert("好了！顏色跟邏輯通通改好了！"); location.reload();
+            alert("搞定！邏輯切換成功。"); location.reload();
         } catch (err) { alert("失敗"); } finally { btn.disabled = false; }
     });
     setLedger('TWD');
