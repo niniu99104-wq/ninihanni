@@ -1,5 +1,5 @@
 // ↓↓↓ 這裡務必換成你剛剛「建立新版本」後拿到的新網址 ↓↓↓
-const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbwjneOvvhTJKI-NDNgePoh6pECQLEqId2ST3tOQ8kidULvWpy8qMeRvk3-qn2hzMG4S/exec";
+const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyxRoWwXnTLLVLyQgRfOk8NGh6xwQAP6rUiyfuIr-cvTB9kRoxeQjMy1Pv3R8crIQc/exec";
 
 let currentType = '支出', currentLedger = 'TWD';
 let systemBalances = {}; 
@@ -20,6 +20,8 @@ async function fetchDashboard() {
         document.getElementById('dash-netcash').innerText = `$${data.netCash}`;
         document.getElementById('dash-assets').innerText = `$${data.totalAsset}`;
         document.getElementById('dash-debt').innerText = `$${data.debt}`;
+        document.getElementById('dash-income').innerText = `$${data.monthIncome}`;
+        document.getElementById('dash-expense').innerText = `$${data.monthExpense}`;
         calculateDiff();
     } catch (e) {
         document.getElementById('dash-netcash').innerText = '連線失敗';
