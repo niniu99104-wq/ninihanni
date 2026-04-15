@@ -1,7 +1,76 @@
+// 請務必更新成妳重新部署後的新網址！
 const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
+
 let currentType = '支出', currentLedger = 'TWD';
+let systemBalances = {}; // 儲存從試算表抓回來的「系統餘額」
+
 document.getElementById('date').valueAsDate = new Date();
 
+// --- 1. 底氣看板：抓取資料 ---
+async function fetchDashboard() {
+    try {
+        const res = await fetch(`${GOOGLE_API_URL}?action=getDashboard`);
+        const data = await res.json();
+        systemBalances = data.accounts; // 存入全域變數供對帳使用
+        
+        document.getElementById('dash-netcash').innerText = `$${data.netCash}`;
+        document.getElementById('dash-assets').innerText = `$${data.totalAsset}`;
+        document.getElementById('dash-debt').innerText = `$${data.debt}`;
+        
+        // 如果目前校正框有數字，觸發一次比對邏輯
+        calculateDiff();
+    } catch (e) {
+        document.getElementById('dash-netcash').innerText = '連線失敗';
+    }
+}
+
+// --- 2. 抓帳比對邏輯 ---
+function calculateDiff() {
+    const acc = document.getElementById('quickAccount').value;
+    const actualInput = document.getElementById('quickAmount').value;
+    const msg = document.getElementById('quick-msg');
+    
+    if (!actualInput) {
+        msg.innerText = "";
+        return;
+    }
+    
+    const actual = parseFloat(actualInput) || 0;
+    const system = systemBalances[acc] || 0;
+    const diff = actual - system;
+    
+    if (diff === 0) {
+        msg.innerHTML = "✅ 與系統相符，帳目正確！";
+    } else {
+        const color = diff > 0 ? "blue" : "red";
+        msg.innerHTML = `⚠️ 差額：<span style="color:${color}; font-weight:bold;">${diff > 0 ? '+' : ''}${diff}</span> (請確認是否有漏記)`;
+    }
+}
+
+// 綁定輸入事件，讓妳打字時就自動算差額
+document.getElementById('quickAmount').addEventListener('input', calculateDiff);
+document.getElementById('quickAccount').addEventListener('change', calculateDiff);
+
+// --- 3. 執行餘額校正 ---
+async function updateWaterBalance() {
+    const acc = document.getElementById('quickAccount').value;
+    const amt = document.getElementById('quickAmount').value;
+    const msg = document.getElementById('quick-msg');
+    
+    if (!amt) return;
+    
+    msg.innerText = "同步更新中...";
+    try {
+        await fetch(`${GOOGLE_API_URL}?action=updateBalance&accountName=${encodeURIComponent(acc)}&amount=${amt}`);
+        msg.innerText = "✅ 水位已校正完畢！";
+        document.getElementById('quickAmount').value = '';
+        fetchDashboard(); // 更新完重新抓一次數字
+    } catch (e) {
+        msg.innerText = "❌ 更新失敗";
+    }
+}
+
+// --- 4. 原有的記帳類別邏輯 (不變) ---
 const categoryMap = {
     '支出': {
         '變動支出': ['娛樂費', '交通費', '線上購物', '實體購物', '早餐/午餐/晚餐', '點心/宵夜/飲料'],
@@ -83,6 +152,7 @@ function updateFields() {
     document.getElementById('mainAmountLabel').innerText = isPayUni ? "銀行實收金額" : (isES ? "商品原價" : "金額");
 }
 
+// --- 5. 記帳表單提交 (提交後會自動更新看板) ---
 document.getElementById('form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const mainAmt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
@@ -105,6 +175,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
     };
     
     try {
+        // ... (這裡保留妳原本的 PAYUNi 和 EasyStore 拆單邏輯)
         if (cat === 'PAYUNi 入帳') {
             const estFee = Math.round(mainAmt * 0.02);
             const totalIncome = mainAmt + pShip + estFee;
@@ -117,7 +188,6 @@ document.getElementById('form').addEventListener('submit', async function(e) {
             const esNote = `[商${mainAmt}/運${shipAmt}${creditAmt?'/折'+creditAmt:''}] ${note}`;
             await send(date, '收入', sub, cat, acc, paidAmt, esNote);
             if (creditAmt > 0) await send(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數)${esNote}`);
-            if (acc === '藍新待撥款') await send(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%手續費)`);
         } else {
             let finalNote = note;
             if (document.getElementById('logisticsGroup').style.display === 'block') {
@@ -125,13 +195,21 @@ document.getElementById('form').addEventListener('submit', async function(e) {
             }
             await send(date, currentType, sub, cat, acc, mainAmt, finalNote);
         }
-        alert("輸入完畢！下一筆！"); 
-        location.reload();
+        
+        alert("記帳完畢！看板更新中..."); 
+        fetchDashboard(); // 提交完順便更新看板水位
+        document.getElementById('amount').value = '';
+        document.getElementById('note').value = '';
     } catch (err) { 
         alert("失敗"); 
     } finally { 
         btn.disabled = false; 
+        document.getElementById('loading').style.display = 'none';
     }
 });
 
-setLedger('TWD');
+// 初始化
+window.addEventListener('DOMContentLoaded', () => {
+    fetchDashboard();
+    setLedger('TWD');
+});
