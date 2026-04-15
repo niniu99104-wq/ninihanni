@@ -11,11 +11,15 @@
     <h2>☘️霓要記得記帳</h2>
     
     <div class="dashboard-card">
-        <div class="dash-title">✨ 目前可用淨現金 (底氣)</div>
+        <div class="dash-title">✨ 目前可用淨現金</div>
         <div class="dash-main" id="dash-netcash">讀取中...</div>
-        <div class="dash-sub">
+        <div class="dash-sub" style="margin-bottom: 8px;">
             <div><span>總資產</span><br><span id="dash-assets" class="dash-num">--</span></div>
             <div><span>待付貨款</span><br><span id="dash-debt" class="dash-num" style="color:#C87A7E;">--</span></div>
+        </div>
+        <div class="dash-sub">
+            <div><span>本月總收入</span><br><span id="dash-income" class="dash-num" style="color:#6B8E6B;">--</span></div>
+            <div><span>本月總支出</span><br><span id="dash-expense" class="dash-num" style="color:#C87A7E;">--</span></div>
         </div>
     </div>
 
@@ -28,6 +32,7 @@
                 <option value="LINE Bank">LINE Bank</option>
                 <option value="LINE Pay Money">LINE Pay Money</option>
                 <option value="iPASS Money">iPASS Money</option>
+                <option value="其他/現金">其他/現金</option>
             </select>
             <input type="number" id="quickAmount" placeholder="輸入實際餘額" style="flex:1; margin:0;">
         </div>
