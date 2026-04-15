@@ -4,169 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>☘️霓要記得記帳</title>
-    <style>
-        body { font-family: "微軟正黑體", sans-serif; background-color: #F7F4F0; color: #5C544E; max-width: 480px; margin: 0 auto; padding: 20px; }
-        .container { background: #FFFFFF; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(184, 174, 166, 0.2); }
-        h2 { text-align: center; color: #8B7355; margin-top: 0; font-weight: 600; letter-spacing: 2px; }
-        .ledger-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #E6E2DD; }
-        .ledger-tab { flex: 1; text-align: center; padding: 12px; background: #FCFBF9; cursor: pointer; font-weight: bold; color: #8C847D; transition: 0.3s; }
-        .ledger-tab.active-twd { background: #8B7355; color: white; }
-        .ledger-tab.active-krw { background: #5C6B73; color: white; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #8C847D; }
-        input, select { width: 100%; height: 48px; padding: 0 12px; box-sizing: border-box; border: 1px solid #E6E2DD; border-radius: 8px; font-size: 16px; background-color: #FCFBF9; color: #5C544E; outline: none; font-family: inherit; }
-        .input-expense:focus { border-color: #C87A7E !important; }
-        .input-income:focus { border-color: #6B8E6B !important; }
-        .radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-        .radio-btn { width: 100%; text-align: center; padding: 14px; border-radius: 8px; border: 1px solid #E6E2DD; cursor: pointer; font-weight: bold; transition: 0.2s; color: #8C847D; box-sizing: border-box; }
-        .radio-btn.active-expense { background-color: #C87A7E; color: white; border-color: #C87A7E; }
-        .radio-btn.active-income { background-color: #6B8E6B; color: white; border-color: #6B8E6B; }
-        button[type="submit"] { width: 100%; margin-top: 10px; padding: 14px; background-color: #8B7355; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        #loading { text-align: center; font-size: 14px; color: #8C847D; display: none; margin: 10px 0; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
     <h2>☘️霓要記得記帳</h2>
+    
     <div class="ledger-tabs">
         <div class="ledger-tab active-twd" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
         <div class="ledger-tab" id="tab-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</div>
     </div>
+    
     <div class="radio-group">
         <div class="radio-btn active-expense" id="btn-expense" onclick="setType('支出')">支出</div>
         <div class="radio-btn" id="btn-income" onclick="setType('收入')">收入</div>
     </div>
+    
     <form id="form">
-        <div class="form-group"><label>日期</label><input type="date" id="date" required></div>
-        <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
-        <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
-        <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;"><label style="color:#5C6B73;">📦 物流標籤</label><select id="logistics"><option value="賣貨便">賣貨便</option><option value="店到店">店到店</option><option value="郵局配送">郵局配送</option><option value="新竹物流(小物)">新竹物流(小物)</option><option value="新竹物流(大件)">新竹物流(大件)</option></select></div>
-        <div class="form-group"><label>帳戶來源</label><select id="account" required onchange="updateFields()"></select></div>
-        <div class="form-group"><label id="mainAmountLabel">金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
-        <div id="esFields" style="display:none;">
-            <div class="form-group" style="background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;"><label style="color:#D48806;">✨ 使用購物金</label><input type="text" inputmode="numeric" id="creditAmount"></div>
-            <div class="form-group" style="background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;"><label style="color:#5C6B73;">📦 預付運費</label><input type="text" inputmode="numeric" id="shippingAmount"></div>
+        <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="date" required>
         </div>
+        
+        <div class="form-group" id="subTypeGroup">
+            <label>類型</label>
+            <select id="subType" onchange="updateCategories()"></select>
+        </div>
+        
+        <div class="form-group">
+            <label>類別</label>
+            <select id="category" required onchange="updateAccounts()"></select>
+        </div>
+        
+        <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
+            <label style="color:#5C6B73;">📦 物流標籤</label>
+            <select id="logistics">
+                <option value="賣貨便">賣貨便</option>
+                <option value="店到店">店到店</option>
+                <option value="郵局配送">郵局配送</option>
+                <option value="新竹物流(小物)">新竹物流(小物)</option>
+                <option value="新竹物流(大件)">新竹物流(大件)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>帳戶來源</label>
+            <select id="account" required onchange="updateFields()"></select>
+        </div>
+        
+        <div class="form-group">
+            <label id="mainAmountLabel">金額</label>
+            <input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required>
+        </div>
+        
+        <div id="esFields" style="display:none;">
+            <div class="form-group" style="background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;">
+                <label style="color:#D48806;">✨ 使用購物金</label>
+                <input type="text" inputmode="numeric" id="creditAmount">
+            </div>
+            <div class="form-group" style="background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
+                <label style="color:#5C6B73;">📦 預付運費</label>
+                <input type="text" inputmode="numeric" id="shippingAmount">
+            </div>
+        </div>
+        
         <div id="payuniAutoFields" style="display:none; background:#F8F4F0; padding:10px; border-radius:8px; border:1px dashed #8B7355;">
-            <div class="form-group"><label style="color:#8B7355;">📦 帳面總扣運費 (支出)</label><input type="text" inputmode="numeric" id="payuniShip"></div>
+            <div class="form-group">
+                <label style="color:#8B7355;">📦 帳面總扣運費 (支出)</label>
+                <input type="text" inputmode="numeric" id="payuniShip">
+            </div>
             <p style="font-size:12px; color:#8B7355; margin-top:5px; margin-bottom:0;">※ 手續費會依「實收」自動估算 2% 記帳</p>
         </div>
-        <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
+        
+        <div class="form-group">
+            <label>備註 (選填)</label>
+            <input type="text" id="note" placeholder="寫點什麼...">
+        </div>
+        
         <div id="loading">連線同步中...</div>
         <button type="submit" id="submitBtn">記錄一筆</button>
     </form>
 </div>
-<script>
-    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
-    let currentType = '支出', currentLedger = 'TWD';
-    document.getElementById('date').valueAsDate = new Date();
-    const categoryMap = {
-        '支出': {
-            '變動支出': ['娛樂費', '交通費', '線上購物', '實體購物', '早餐/午餐/晚餐', '點心/宵夜/飲料'],
-            '固定支出': ['房租', '瓦斯費', '電信費', '燃料費', '債務還款', 'APP訂閱', '水費/電費', '保險(小孩)', '保險(大人)', '汽機車牌照稅'],
-            '小孩支出': ['尿布', '健康', '娛樂', '學雜費'],
-            '甜點支出': ['運費', '手續費', '包材進貨', '材料進貨'],
-            '選品支出 (零售)': ['手續費', '選品進貨', '藍新沖銷', '國際運費', '國內運費', '斷貨退款', '活動購物金'],
-            '代理支出 (批發)': ['成本', '代墊款', '斷貨退款', '國際運費', '國內運費', '批發儲值(台幣)']
-        },
-        '收入': {
-            '個人收入': ['一般', '沐光毓師資', '沐光毓小幫手'],
-            '甜點收入': ['實體門市', '私訊訂購', '表單訂購', 'PAYUNi 入帳'],
-            '選品收入 (零售)': ['現貨出清', '記事本收款', 'EasyStore 訂單'],
-            '代理收入 (批發)': ['倉庫整理費', '代墊款回收', '國際運費收回', '國內運費收回']
-        }
-    };
-    function setLedger(l) { 
-        currentLedger = l; 
-        document.getElementById('tab-twd').className = l === 'TWD' ? 'ledger-tab active-twd' : 'ledger-tab';
-        document.getElementById('tab-krw').className = l === 'KRW' ? 'ledger-tab active-krw' : 'ledger-tab';
-        setType('支出'); 
-    }
-    function setType(t) { 
-        currentType = t; 
-        document.getElementById('btn-expense').className = t==='支出'?'radio-btn active-expense':'radio-btn';
-        document.getElementById('btn-income').className = t==='收入'?'radio-btn active-income':'radio-btn';
-        if (currentLedger === 'TWD') {
-            document.getElementById('subTypeGroup').style.display = 'block';
-            const subs = Object.keys(categoryMap[t]);
-            document.getElementById('subType').innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
-            updateCategories(); 
-        } else {
-            document.getElementById('subTypeGroup').style.display = 'none';
-            document.getElementById('category').innerHTML = t === '支出' ? '<option value="代理下單">代理下單</option>' : '<option value="儲值">儲值</option>';
-            document.getElementById('account').innerHTML = '<option value="批發網點數">批發網點數</option>';
-        }
-    }
-    function updateCategories() {
-        if (currentLedger === 'KRW') return;
-        const sub = document.getElementById('subType').value;
-        const cats = categoryMap[currentType][sub];
-        document.getElementById('category').innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-        updateAccounts();
-    }
-    function updateAccounts() {
-        if (currentLedger === 'KRW') return;
-        const sub = document.getElementById('subType').value;
-        const cat = document.getElementById('category').value;
-        const isES = (cat === 'EasyStore 訂單');
-        const isPayUni = (cat === 'PAYUNi 入帳');
-        let list = ['現金', '信用卡', 'Line Pay', 'iPass Money', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        if (isPayUni) list = ['銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        else if (isES) list = ['Line Pay', '藍新待撥款', '銀行轉帳 (中國信託)', '銀行轉帳 (台新銀行)'];
-        else if (cat === '記事本收款') list = ['Line Pay', 'iPass Money', '銀行轉帳 (台新銀行)'];
-        else if (cat === '藍新沖銷') list = ['銀行轉帳 (中國信託)'];
-        else if (cat === '活動購物金') list = ['ES購物金'];
-        if (currentType === '收入' || sub.includes('代理')) list = list.filter(i => i !== '信用卡');
-        list.sort((a, b) => a.length - b.length);
-        document.getElementById('account').innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
-        updateFields();
-    }
-    function updateFields() {
-        const cat = document.getElementById('category').value;
-        const isES = (cat === 'EasyStore 訂單');
-        const isPayUni = (cat === 'PAYUNi 入帳');
-        document.getElementById('esFields').style.display = isES ? 'block' : 'none';
-        document.getElementById('payuniAutoFields').style.display = isPayUni ? 'block' : 'none';
-        document.getElementById('logisticsGroup').style.display = (currentType === '支出' && (cat === '國內運費' || cat === '運費')) ? 'block' : 'none';
-        document.getElementById('mainAmountLabel').innerText = isPayUni ? "銀行實收金額" : (isES ? "商品原價" : "金額");
-    }
-    document.getElementById('form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const mainAmt = parseInt(document.getElementById('amount').value.replace(/\D/g,'')) || 0;
-        const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
-        const shipAmt = parseInt(document.getElementById('shippingAmount').value.replace(/\D/g,'')) || 0;
-        const pShip = parseInt(document.getElementById('payuniShip').value.replace(/\D/g,'')) || 0;
-        let note = document.getElementById('note').value;
-        const sub = currentLedger === 'KRW' ? '批發網(韓幣)' : document.getElementById('subType').value;
-        const cat = document.getElementById('category').value;
-        const acc = document.getElementById('account').value;
-        const date = document.getElementById('date').value;
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true; document.getElementById('loading').style.display = 'block';
-        const send = async (d, t, st, c, a, am, n) => { await fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${encodeURIComponent(n)}`); };
-        try {
-            if (cat === 'PAYUNi 入帳') {
-                const estFee = Math.round(mainAmt * 0.02);
-                const totalIncome = mainAmt + pShip + estFee;
-                const splitNote = `[PAYUNi撥款實結: 實收${mainAmt}/扣運${pShip}/估手續${estFee}] ${note}`;
-                await send(date, '收入', sub, cat, acc, totalIncome, splitNote);
-                if (pShip > 0) await send(date, '支出', '甜點支出', '運費', acc, pShip, `(PAYUNi扣運)${note}`);
-                await send(date, '支出', '甜點支出', '手續費', acc, estFee, `(PAYUNi估手續)${note}`);
-            } else if (cat === 'EasyStore 訂單') {
-                const paidAmt = mainAmt + shipAmt - creditAmt;
-                const esNote = `[商${mainAmt}/運${shipAmt}${creditAmt?'/折'+creditAmt:''}] ${note}`;
-                await send(date, '收入', sub, cat, acc, paidAmt, esNote);
-                if (creditAmt > 0) await send(date, '收入', sub, cat, 'ES購物金', creditAmt, `(點數)${esNote}`);
-                if (acc === '藍新待撥款') await send(date, '支出', '選品支出 (零售)', '手續費', acc, Math.round(paidAmt*0.028), `(2.8%手續費)`);
-            } else {
-                let finalNote = note;
-                if (document.getElementById('logisticsGroup').style.display === 'block') finalNote = `[${document.getElementById('logistics').value}] ${note}`;
-                await send(date, currentType, sub, cat, acc, mainAmt, finalNote);
-            }
-            alert("輸入完畢！下一筆！"); location.reload();
-        } catch (err) { alert("失敗"); } finally { btn.disabled = false; }
-    });
-    setLedger('TWD');
-</script>
+
+<script src="script.js"></script>
 </body>
 </html>
