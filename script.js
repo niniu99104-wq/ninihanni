@@ -1,5 +1,5 @@
 // 請務必更新成妳重新部署後的新網址！
-const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyk5zgLaixBmVBwG_uICcFFq4wk6PqjD1APKqyO8TjsUnQ6KzWfS8YFlIXiDHddeker/exec";
+const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbxto0E23lhQ3_iRw-4iJZ1jkbmUQzwmtptm_HXYA_L0DtQ7A7S-crUDdyDFLT4zKYm_/exec";
 
 let currentType = '支出', currentLedger = 'TWD';
 let systemBalances = {}; // 儲存從試算表抓回來的「系統餘額」
