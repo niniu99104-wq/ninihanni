@@ -1,274 +1,161 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☘️霓要記得記帳</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☘️霓要記得記帳</title>
+<style>
+body{font-family:"微軟正黑體",sans-serif;background-color:#F7F4F0;color:#5C544E;max-width:480px;margin:0 auto;padding:20px;}
+.container{background:#FFFFFF;padding:25px;border-radius:16px;box-shadow:0 4px 20px rgba(184,174,166,0.2);}
+h2{text-align:center;color:#8B7355;margin-top:0;font-weight:600;letter-spacing:2px;}
+.dashboard-card{background:linear-gradient(135deg,#8B7355 0%,#5C544E 100%);color:white;padding:20px;border-radius:12px;margin-bottom:20px;text-align:center;box-shadow:0 4px 15px rgba(139,115,85,0.3);}
+.dash-title{font-size:14px;opacity:0.9;margin-bottom:5px;}
+.dash-main{font-size:32px;font-weight:bold;margin-bottom:15px;letter-spacing:1px;}
+.dash-sub{display:flex;justify-content:space-between;background:rgba(255,255,255,0.1);padding:10px;border-radius:8px;font-size:13px;}
+.dash-sub div{flex:1;}
+.dash-num{font-size:16px;font-weight:bold;margin-top:4px;display:inline-block;background:white;color:#5C544E;padding:2px 8px;border-radius:4px;}
+.quick-balance-box{background:#FCFBF9;padding:15px;border-radius:8px;border:1px solid #E6E2DD;margin-bottom:10px;}
+.btn-secondary{width:100%;margin-top:10px;padding:10px;background-color:#E6E2DD;color:#5C544E;border:none;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s;}
+.btn-secondary:hover{background-color:#D4CDC5;}
+.ledger-tabs{display:flex;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1px solid #E6E2DD;}
+.ledger-tab{flex:1;text-align:center;padding:12px;background:#FCFBF9;cursor:pointer;font-weight:bold;color:#8C847D;transition:0.3s;}
+.ledger-tab.active-twd{background:#8B7355;color:white;}
+.ledger-tab.active-krw{background:#5C6B73;color:white;}
+.form-group{margin-bottom:15px;}
+label{display:block;font-size:14px;font-weight:bold;margin-bottom:5px;color:#8C847D;}
+input,select{width:100%;height:48px;padding:0 12px;box-sizing:border-box;border:1px solid #E6E2DD;border-radius:8px;font-size:16px;background-color:#FCFBF9;color:#5C544E;outline:none;font-family:inherit;}
+.input-expense:focus{border-color:#C87A7E!important;}
+.input-income:focus{border-color:#6B8E6B!important;}
+.radio-group{display:flex;flex-direction:column;gap:10px;margin-bottom:15px;}
+.radio-btn{width:100%;text-align:center;padding:14px;border-radius:8px;border:1px solid #E6E2DD;cursor:pointer;font-weight:bold;transition:0.2s;color:#8C847D;box-sizing:border-box;}
+.radio-btn.active-expense{background-color:#C87A7E;color:white;border-color:#C87A7E;}
+.radio-btn.active-income{background-color:#6B8E6B;color:white;border-color:#6B8E6B;}
+button[type="submit"]{width:100%;margin-top:10px;padding:14px;background-color:#8B7355;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;transition:0.2s;}
+#loading{text-align:center;font-size:14px;color:#8C847D;display:none;margin:10px 0;}
+
+/* ── 快速記帳浮動按鈕 ── */
+#qe-fab{position:fixed;bottom:28px;right:22px;z-index:9000;display:flex;flex-direction:column;align-items:flex-end;gap:12px;}
+#qe-toggle{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6d4c41 0%,#4e342e 100%);border:none;box-shadow:0 4px 18px rgba(78,52,46,0.38);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform 0.22s cubic-bezier(.34,1.56,.64,1),box-shadow 0.2s;outline:none;}
+#qe-toggle:hover{transform:scale(1.09);box-shadow:0 6px 24px rgba(78,52,46,0.48);}
+#qe-toggle.open{transform:rotate(45deg) scale(1.05);}
+#qe-panel{display:none;flex-direction:column;background:#fdfaf6;border:1.5px solid #d7ccc8;border-radius:20px;box-shadow:0 8px 36px rgba(141,110,99,0.22);width:300px;overflow:hidden;transform-origin:bottom right;}
+#qe-panel.visible{display:flex;animation:qe-in 0.26s cubic-bezier(.34,1.4,.64,1) both;}
+@keyframes qe-in{from{opacity:0;transform:scale(0.82) translateY(18px);}to{opacity:1;transform:scale(1) translateY(0);}}
+#qe-header{background:linear-gradient(135deg,#4e342e 0%,#6d4c41 100%);padding:14px 18px 12px;display:flex;align-items:center;justify-content:space-between;}
+#qe-header span{font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;}
+#qe-header small{font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;display:block;}
+#qe-body{padding:16px 16px 18px;display:flex;flex-direction:column;gap:10px;}
+.qe-type-row{display:flex;gap:6px;}
+.qe-type-btn{flex:1;padding:8px 0;border:1.5px solid #d7ccc8;border-radius:10px;background:#fff;font-size:12.5px;font-weight:600;color:#795548;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.qe-type-btn.active-exp{background:#fbe9e7;border-color:#d84315;color:#d84315;}
+.qe-type-btn.active-inc{background:#f1f8e9;border-color:#558b2f;color:#558b2f;}
+.qe-label{font-size:11.5px;font-weight:600;color:#795548;margin-bottom:4px;display:block;}
+.qe-select,.qe-input{width:100%;background:#fff;border:1.5px solid #d7ccc8;border-radius:10px;padding:9px 12px;font-size:13.5px;color:#3e2723;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;transition:border-color 0.18s;box-sizing:border-box;height:auto;}
+.qe-select:focus,.qe-input:focus{border-color:#8d6e63;}
+.qe-input-amount{font-size:20px;font-weight:700;text-align:right;letter-spacing:0.5px;}
+.qe-input-amount::placeholder{font-size:14px;font-weight:400;}
+#qe-doudou-section{background:#fff9f0;border:1.5px dashed #ffb74d;border-radius:10px;padding:10px 12px;display:none;flex-direction:column;gap:8px;}
+.qe-doudou-title{font-size:12px;font-weight:700;color:#e65100;margin-bottom:2px;}
+#qe-submit{width:100%;padding:12px;background:linear-gradient(135deg,#6d4c41 0%,#4e342e 100%);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.3px;transition:opacity 0.15s,transform 0.15s;}
+#qe-submit:active{transform:scale(0.98);opacity:0.9;}
+#qe-submit:disabled{opacity:0.5;cursor:not-allowed;}
+#qe-msg{font-size:12px;text-align:center;min-height:16px;font-weight:600;color:#558b2f;}
+.qe-row{display:flex;flex-direction:column;}
+</style>
 </head>
 <body>
 <div class="container">
-    <h2>☘️霓要記得記帳</h2>
-    
-    <div class="dashboard-card">
-        <div class="dash-title">✨ 目前可用淨現金</div>
-        <div class="dash-main" id="dash-netcash">讀取中...</div>
-        <div class="dash-sub" style="margin-bottom: 8px;">
-            <div><span>總資產</span><br><span id="dash-assets" class="dash-num">--</span></div>
-            <div><span>待付貨款</span><br><span id="dash-debt" class="dash-num" style="color:#C87A7E;">--</span></div>
-        </div>
-        <div class="dash-sub">
-            <div><span>本月總收入</span><br><span id="dash-income" class="dash-num" style="color:#6B8E6B;">--</span></div>
-            <div><span>本月總支出</span><br><span id="dash-expense" class="dash-num" style="color:#C87A7E;">--</span></div>
-        </div>
-    </div>
+  <h2>☘️霓要記得記帳</h2>
 
-    <div class="quick-balance-box">
-        <label>💳 抓帳比對與餘額校正</label>
-        <div style="display:flex; gap:10px; margin-top:5px;">
-            <select id="quickAccount" style="flex:1;">
-                <option value="台新銀行">台新銀行</option>
-                <option value="中國信託">中國信託</option>
-                <option value="LINE Bank">LINE Bank</option>
-                <option value="LINE Pay Money">LINE Pay Money</option>
-                <option value="iPASS Money">iPASS Money</option>
-                <option value="其他/現金">其他/現金</option>
-            </select>
-            <input type="number" id="quickAmount" placeholder="輸入實際餘額" style="flex:1; margin:0;">
-        </div>
-        <button type="button" class="btn-secondary" onclick="updateWaterBalance()">校正系統餘額</button>
-        <div id="quick-msg" style="font-size:12px; color:#8B7355; text-align:center; margin-top:10px; min-height: 18px;"></div>
+  <div class="dashboard-card">
+    <div class="dash-title">✨ 目前可用淨現金</div>
+    <div class="dash-main" id="dash-netcash">讀取中...</div>
+    <div class="dash-sub" style="margin-bottom:8px;">
+      <div><span>總資產</span><br><span id="dash-assets" class="dash-num">--</span></div>
+      <div><span>待付貨款</span><br><span id="dash-debt" class="dash-num" style="color:#C87A7E;">--</span></div>
     </div>
+    <div class="dash-sub">
+      <div><span>本月總收入</span><br><span id="dash-income" class="dash-num" style="color:#6B8E6B;">--</span></div>
+      <div><span>本月總支出</span><br><span id="dash-expense" class="dash-num" style="color:#C87A7E;">--</span></div>
+    </div>
+  </div>
 
-    <hr style="border: 0; border-top: 1px dashed #E6E2DD; margin: 25px 0;">
-    
-    <div class="ledger-tabs">
-        <div class="ledger-tab active-twd" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
-        <div class="ledger-tab" id="tab-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</div>
+  <div class="quick-balance-box">
+    <label>💳 抓帳比對與餘額校正</label>
+    <div style="display:flex;gap:10px;margin-top:5px;">
+      <select id="quickAccount" style="flex:1;">
+        <option value="台新銀行">台新銀行</option>
+        <option value="中國信託">中國信託</option>
+        <option value="LINE Bank">LINE Bank</option>
+        <option value="LINE Pay Money">LINE Pay Money</option>
+        <option value="iPASS Money">iPASS Money</option>
+        <option value="其他/現金">其他/現金</option>
+      </select>
+      <input type="number" id="quickAmount" placeholder="輸入實際餘額" style="flex:1;margin:0;">
     </div>
-    
-    <div class="radio-group">
-        <div class="radio-btn active-expense" id="btn-expense" onclick="setType('支出')">支出</div>
-        <div class="radio-btn" id="btn-income" onclick="setType('收入')">收入</div>
+    <button type="button" class="btn-secondary" onclick="updateWaterBalance()">校正系統餘額</button>
+    <div id="quick-msg" style="font-size:12px;color:#8B7355;text-align:center;margin-top:10px;min-height:18px;"></div>
+  </div>
+
+  <hr style="border:0;border-top:1px dashed #E6E2DD;margin:25px 0;">
+
+  <div class="ledger-tabs">
+    <div class="ledger-tab active-twd" id="tab-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</div>
+    <div class="ledger-tab" id="tab-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</div>
+  </div>
+
+  <div class="radio-group">
+    <div class="radio-btn active-expense" id="btn-expense" onclick="setType('支出')">支出</div>
+    <div class="radio-btn" id="btn-income" onclick="setType('收入')">收入</div>
+  </div>
+
+  <form id="form">
+    <div class="form-group"><label>日期</label><input type="date" id="date" required></div>
+    <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
+    <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
+    <div class="form-group" id="logisticsGroup" style="display:none;background:#F0F4F8;padding:10px;border-radius:8px;border:1px dashed #AAB8C2;">
+      <label style="color:#5C6B73;">📦 物流標籤</label>
+      <select id="logistics">
+        <option value="賣貨便">賣貨便</option><option value="店到店">店到店</option>
+        <option value="郵局配送">郵局配送</option><option value="新竹物流(小物)">新竹物流(小物)</option>
+        <option value="新竹物流(大件)">新竹物流(大件)</option>
+      </select>
     </div>
-    
-    <form id="form">
-        <div class="form-group"><label>日期</label><input type="date" id="date" required></div>
-        <div class="form-group" id="subTypeGroup"><label>類型</label><select id="subType" onchange="updateCategories()"></select></div>
-        <div class="form-group"><label>類別</label><select id="category" required onchange="updateAccounts()"></select></div>
-        <div class="form-group" id="logisticsGroup" style="display:none; background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;">
-            <label style="color:#5C6B73;">📦 物流標籤</label>
-            <select id="logistics"><option value="賣貨便">賣貨便</option><option value="店到店">店到店</option><option value="郵局配送">郵局配送</option><option value="新竹物流(小物)">新竹物流(小物)</option><option value="新竹物流(大件)">新竹物流(大件)</option></select>
-        </div>
-        <div class="form-group"><label>帳戶來源</label><select id="account" required onchange="updateFields()"></select></div>
-        <div class="form-group"><label id="mainAmountLabel">金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
-        <div id="esFields" style="display:none;">
-            <div class="form-group" style="background:#FFF9F0; padding:10px; border-radius:8px; border:1px dashed #FFD1A4;"><label style="color:#D48806;">✨ 使用購物金</label><input type="text" inputmode="numeric" id="creditAmount"></div>
-            <div class="form-group" style="background:#F0F4F8; padding:10px; border-radius:8px; border:1px dashed #AAB8C2;"><label style="color:#5C6B73;">📦 預付運費</label><input type="text" inputmode="numeric" id="shippingAmount"></div>
-        </div>
-        <div id="payuniAutoFields" style="display:none; background:#F8F4F0; padding:10px; border-radius:8px; border:1px dashed #8B7355;">
-            <div class="form-group"><label style="color:#8B7355;">📦 帳面總扣運費 (支出)</label><input type="text" inputmode="numeric" id="payuniShip"></div>
-            <p style="font-size:12px; color:#8B7355; margin-top:5px; margin-bottom:0;">※ 手續費會依「實收」自動估算 2% 記帳</p>
-        </div>
-        <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
-        <div id="loading">連線同步中...</div>
-        <button type="submit" id="submitBtn">記錄一筆</button>
-    </form>
+    <div class="form-group"><label>帳戶來源</label><select id="account" required onchange="updateFields()"></select></div>
+    <div class="form-group"><label id="mainAmountLabel">金額</label><input type="text" inputmode="numeric" id="amount" class="input-expense" placeholder="輸入數字" required></div>
+    <div id="esFields" style="display:none;">
+      <div class="form-group" style="background:#FFF9F0;padding:10px;border-radius:8px;border:1px dashed #FFD1A4;"><label style="color:#D48806;">✨ 使用購物金</label><input type="text" inputmode="numeric" id="creditAmount"></div>
+      <div class="form-group" style="background:#F0F4F8;padding:10px;border-radius:8px;border:1px dashed #AAB8C2;"><label style="color:#5C6B73;">📦 預付運費</label><input type="text" inputmode="numeric" id="shippingAmount"></div>
+    </div>
+    <div id="payuniAutoFields" style="display:none;background:#F8F4F0;padding:10px;border-radius:8px;border:1px dashed #8B7355;">
+      <div class="form-group"><label style="color:#8B7355;">📦 帳面總扣運費 (支出)</label><input type="text" inputmode="numeric" id="payuniShip"></div>
+      <p style="font-size:12px;color:#8B7355;margin-top:5px;margin-bottom:0;">※ 手續費會依「實收」自動估算 2% 記帳</p>
+    </div>
+    <div class="form-group"><label>備註 (選填)</label><input type="text" id="note" placeholder="寫點什麼..."></div>
+    <div id="loading">連線同步中...</div>
+    <button type="submit" id="submitBtn">記錄一筆</button>
+  </form>
 </div>
-<script src="script.js"></script>
-    <!-- 快速記帳浮動按鈕 — 貼在 </body> 前即可 -->
 
-<style>
-#qe-fab {
-  position: fixed;
-  bottom: 28px;
-  right: 22px;
-  z-index: 9000;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-#qe-toggle {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
-  border: none;
-  box-shadow: 0 4px 18px rgba(78,52,46,0.38);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
-  outline: none;
-}
-#qe-toggle:hover { transform: scale(1.09); box-shadow: 0 6px 24px rgba(78,52,46,0.48); }
-#qe-toggle.open  { transform: rotate(45deg) scale(1.05); }
-
-#qe-panel {
-  display: none;
-  flex-direction: column;
-  background: #fdfaf6;
-  border: 1.5px solid #d7ccc8;
-  border-radius: 20px;
-  box-shadow: 0 8px 36px rgba(141,110,99,0.22);
-  width: 320px;
-  overflow: hidden;
-  animation: qe-slide-in 0.26s cubic-bezier(.34,1.4,.64,1) both;
-  transform-origin: bottom right;
-}
-#qe-panel.visible { display: flex; }
-
-@keyframes qe-slide-in {
-  from { opacity: 0; transform: scale(0.82) translateY(18px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
-}
-
-#qe-header {
-  background: linear-gradient(135deg, #4e342e 0%, #6d4c41 100%);
-  padding: 14px 18px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-#qe-header span { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
-#qe-header small { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; display: block; }
-
-#qe-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 10px; }
-
-.qe-type-row {
-  display: flex;
-  gap: 6px;
-}
-.qe-type-btn {
-  flex: 1;
-  padding: 8px 0;
-  border: 1.5px solid #d7ccc8;
-  border-radius: 10px;
-  background: #fff;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #795548;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-}
-.qe-type-btn.active-exp { background: #fbe9e7; border-color: #d84315; color: #d84315; }
-.qe-type-btn.active-inc { background: #f1f8e9; border-color: #558b2f; color: #558b2f; }
-
-.qe-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #795548;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.qe-select, .qe-input {
-  width: 100%;
-  background: #fff;
-  border: 1.5px solid #d7ccc8;
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 13.5px;
-  color: #3e2723;
-  font-family: inherit;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-  transition: border-color 0.18s;
-  box-sizing: border-box;
-}
-.qe-select:focus, .qe-input:focus { border-color: #8d6e63; }
-
-.qe-input-amount {
-  font-size: 20px;
-  font-weight: 700;
-  text-align: right;
-  letter-spacing: 0.5px;
-}
-.qe-input-amount::placeholder { font-size: 14px; font-weight: 400; }
-
-#qe-doudou-section {
-  background: #fff9f0;
-  border: 1.5px dashed #ffb74d;
-  border-radius: 10px;
-  padding: 10px 12px;
-  display: none;
-  flex-direction: column;
-  gap: 8px;
-}
-#qe-doudou-section .qe-doudou-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #e65100;
-  margin-bottom: 2px;
-}
-
-#qe-submit {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  letter-spacing: 0.3px;
-  transition: opacity 0.15s, transform 0.15s;
-}
-#qe-submit:active { transform: scale(0.98); opacity: 0.9; }
-#qe-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-#qe-msg {
-  font-size: 12px;
-  text-align: center;
-  min-height: 16px;
-  font-weight: 600;
-  color: #558b2f;
-}
-
-.qe-row { display: flex; flex-direction: column; }
-</style>
-
-<!-- 浮動按鈕主體 -->
+<!-- ── 快速記帳浮動按鈕 HTML ── -->
 <div id="qe-fab">
-
-  <!-- 面板 -->
   <div id="qe-panel">
     <div id="qe-header">
-      <div>
-        <span>⚡ 快速記帳</span>
-        <small>記完自動同步看板</small>
-      </div>
+      <div><span>⚡ 快速記帳</span><small>記完自動同步看板</small></div>
     </div>
-
     <div id="qe-body">
-
-      <!-- 收支切換 -->
       <div class="qe-type-row">
         <button class="qe-type-btn active-exp" id="qe-btn-exp" onclick="qeSetType('支出')">💸 支出</button>
-        <button class="qe-type-btn"            id="qe-btn-inc" onclick="qeSetType('收入')">💰 收入</button>
+        <button class="qe-type-btn" id="qe-btn-inc" onclick="qeSetType('收入')">💰 收入</button>
       </div>
-
-      <!-- 金額 -->
       <div class="qe-row">
         <label class="qe-label">金額（NT$）</label>
         <input class="qe-input qe-input-amount" type="number" id="qe-amount" inputmode="numeric" placeholder="0">
       </div>
-
-      <!-- 大類別 -->
       <div class="qe-row">
         <label class="qe-label">類別</label>
         <select class="qe-select" id="qe-cat" onchange="qeOnCatChange()"></select>
       </div>
-
-      <!-- DouDou 代理細項（條件顯示） -->
       <div id="qe-doudou-section">
         <div class="qe-doudou-title">🥜 DouDou 代理細項</div>
         <select class="qe-select" id="qe-doudou-sub">
@@ -279,8 +166,6 @@
           <option value="代理儲值入帳">代理儲值入帳</option>
         </select>
       </div>
-
-      <!-- 帳戶 -->
       <div class="qe-row">
         <label class="qe-label">帳戶</label>
         <select class="qe-select" id="qe-account">
@@ -293,162 +178,337 @@
           <option value="信用卡">信用卡</option>
         </select>
       </div>
-
-      <!-- 備註 -->
       <div class="qe-row">
         <label class="qe-label">備註（選填）</label>
         <input class="qe-input" type="text" id="qe-note" placeholder="寫點什麼...">
       </div>
-
-      <!-- 送出 -->
       <div id="qe-msg"></div>
       <button id="qe-submit" onclick="qeSubmit()">⚡ 記一筆</button>
-
     </div>
   </div>
-
-  <!-- FAB 按鈕 -->
   <button id="qe-toggle" onclick="qeToggle()" aria-label="快速記帳">
     <span id="qe-toggle-icon">✏️</span>
   </button>
 </div>
 
 <script>
-(function(){
-  let qeType = '支出';
-  let qeOpen = false;
+// ════════════════════════════════════════
+// 設定
+// ════════════════════════════════════════
+const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbyxRoWwXnTLLVLyQgRfOk8NGh6xwQAP6rUiyfuIr-cvTB9kRoxeQjMy1Pv3R8crIQc/exec";
 
-  const QE_CAT_MAP = {
-    '支出': [
-      '娛樂費', '交通費', '線上購物', '實體購物',
-      '餐飲', '點心/飲料',
-      '房租', '電信費', '水電費', '燃料費',
-      'APP訂閱', '保險', '債務還款',
-      '小孩支出', '甜點支出',
-      '🥜 DouDou 代理支出'
-    ],
-    '收入': [
-      '個人收入', '甜點收入', '選品收入', '代理收入', '其他收入'
-    ]
-  };
+// ════════════════════════════════════════
+// 速度優化：快取儀表板資料 30 秒
+// ════════════════════════════════════════
+const CACHE_KEY = 'ledger_dashboard_cache';
+const CACHE_TTL = 30000; // 30秒
 
-  function qeSetType(t) {
-    qeType = t;
-    document.getElementById('qe-btn-exp').className = 'qe-type-btn' + (t==='支出' ? ' active-exp' : '');
-    document.getElementById('qe-btn-inc').className = 'qe-type-btn' + (t==='收入' ? ' active-inc' : '');
-    const sel = document.getElementById('qe-cat');
-    sel.innerHTML = QE_CAT_MAP[t].map(c => `<option value="${c}">${c}</option>`).join('');
-    qeOnCatChange();
+function getCachedDashboard() {
+  try {
+    const c = JSON.parse(sessionStorage.getItem(CACHE_KEY));
+    if (c && Date.now() - c.ts < CACHE_TTL) return c.data;
+  } catch(e) {}
+  return null;
+}
+function setCachedDashboard(data) {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch(e) {}
+}
+function clearDashboardCache() {
+  try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
+}
+
+// ════════════════════════════════════════
+// 儀表板
+// ════════════════════════════════════════
+let currentType = '支出', currentLedger = 'TWD';
+let systemBalances = {};
+
+document.getElementById('date').valueAsDate = new Date();
+
+async function fetchDashboard(forceRefresh) {
+  // 有快取就先塞進畫面，立刻顯示
+  if (!forceRefresh) {
+    const cached = getCachedDashboard();
+    if (cached) { renderDashboard(cached); return; }
   }
-  window.qeSetType = qeSetType;
-
-  function qeOnCatChange() {
-    const cat = document.getElementById('qe-cat').value;
-    const dd  = document.getElementById('qe-doudou-section');
-    dd.style.display = cat.includes('DouDou') ? 'flex' : 'none';
-  }
-  window.qeOnCatChange = qeOnCatChange;
-
-  function qeToggle() {
-    qeOpen = !qeOpen;
-    const panel  = document.getElementById('qe-panel');
-    const toggle = document.getElementById('qe-toggle');
-    const icon   = document.getElementById('qe-toggle-icon');
-    if (qeOpen) {
-      panel.classList.add('visible');
-      toggle.classList.add('open');
-      icon.textContent = '+';
-      setTimeout(() => document.getElementById('qe-amount').focus(), 120);
-    } else {
-      panel.classList.remove('visible');
-      toggle.classList.remove('open');
-      icon.textContent = '✏️';
-    }
-  }
-  window.qeToggle = qeToggle;
-
-  async function qeSubmit() {
-    const amount  = parseInt(document.getElementById('qe-amount').value) || 0;
-    const cat     = document.getElementById('qe-cat').value;
-    const account = document.getElementById('qe-account').value;
-    const note    = document.getElementById('qe-note').value.trim();
-    const msg     = document.getElementById('qe-msg');
-    const btn     = document.getElementById('qe-submit');
-
-    if (!amount || amount <= 0) {
-      msg.style.color = '#d84315';
-      msg.textContent = '⚠️ 請輸入金額';
+  try {
+    const res  = await fetch(`${GOOGLE_API_URL}?action=getDashboard`);
+    const data = await res.json();
+    if (data.netCash === "錯") {
+      document.getElementById('dash-netcash').innerText = '請檢查試算表分頁名稱';
       return;
     }
-
-    // 組合備註：如果是 DouDou 類別就帶入細項
-    let finalNote = note;
-    let finalCat  = cat;
-    if (cat.includes('DouDou')) {
-      const sub = document.getElementById('qe-doudou-sub').value;
-      finalCat  = 'DouDou代理支出';
-      finalNote = `[DouDou-${sub}] ${note}`.trim();
-    }
-
-    // 決定 subType（對應你原本系統的分類）
-    const subTypeMap = {
-      '娛樂費':'變動支出','交通費':'變動支出','線上購物':'變動支出',
-      '實體購物':'變動支出','餐飲':'變動支出','點心/飲料':'變動支出',
-      '房租':'固定支出','電信費':'固定支出','水電費':'固定支出',
-      '燃料費':'固定支出','APP訂閱':'固定支出','保險':'固定支出','債務還款':'固定支出',
-      '小孩支出':'小孩支出',
-      '甜點支出':'甜點支出',
-      'DouDou代理支出':'選品支出 (零售)',
-    };
-    const subType = subTypeMap[finalCat] || '變動支出';
-
-    // 帳戶名稱對應
-    const accMap = {
-      '中國信託': '銀行轉帳 (中國信託)',
-      '台新銀行': '銀行轉帳 (台新銀行)',
-      'LINE Bank': '銀行轉帳 (LINE Bank)',
-      'LINE Pay Money': 'Line Pay',
-      'iPASS Money': 'iPass Money',
-      '現金': '現金',
-      '信用卡': '信用卡',
-    };
-    const finalAccount = accMap[account] || account;
-
-    const today = new Date().toISOString().slice(0, 10);
-
-    btn.disabled = true;
-    msg.style.color = '#795548';
-    msg.textContent = '同步中...';
-
-    try {
-      await fetch(GOOGLE_API_URL +
-        `?action=add` +
-        `&date=${today}` +
-        `&type=${encodeURIComponent(qeType)}` +
-        `&subType=${encodeURIComponent(subType)}` +
-        `&category=${encodeURIComponent(finalCat)}` +
-        `&account=${encodeURIComponent(finalAccount)}` +
-        `&amount=${amount}` +
-        `&note=${encodeURIComponent(finalNote)}`
-      );
-      msg.style.color = '#558b2f';
-      msg.textContent = '✅ 記帳完成！';
-      document.getElementById('qe-amount').value = '';
-      document.getElementById('qe-note').value   = '';
-      if (typeof fetchDashboard === 'function') fetchDashboard();
-      setTimeout(() => { msg.textContent = ''; }, 2200);
-    } catch(e) {
-      msg.style.color = '#d84315';
-      msg.textContent = '❌ 連線失敗，請重試';
-    } finally {
-      btn.disabled = false;
-    }
+    setCachedDashboard(data);
+    renderDashboard(data);
+  } catch(e) {
+    document.getElementById('dash-netcash').innerText = '連線失敗';
   }
-  window.qeSubmit = qeSubmit;
+}
 
-  // 初始化類別
+function renderDashboard(data) {
+  systemBalances = data.accounts;
+  document.getElementById('dash-netcash').innerText  = `$${data.netCash}`;
+  document.getElementById('dash-assets').innerText   = `$${data.totalAsset}`;
+  document.getElementById('dash-debt').innerText     = `$${data.debt}`;
+  document.getElementById('dash-income').innerText   = `$${data.monthIncome}`;
+  document.getElementById('dash-expense').innerText  = `$${data.monthExpense}`;
+  calculateDiff();
+}
+
+function calculateDiff() {
+  const acc         = document.getElementById('quickAccount').value;
+  const actualInput = document.getElementById('quickAmount').value;
+  const msg         = document.getElementById('quick-msg');
+  if (!actualInput) { msg.innerText = ""; return; }
+  const actual = parseFloat(actualInput) || 0;
+  const system = systemBalances[acc] || 0;
+  const diff   = actual - system;
+  if (diff === 0) {
+    msg.innerHTML = "✅ 與系統相符，帳目正確！";
+  } else {
+    const color = diff > 0 ? "blue" : "red";
+    msg.innerHTML = `⚠️ 差額：<span style="color:${color};font-weight:bold;">${diff > 0 ? '+' : ''}${diff}</span>`;
+  }
+}
+
+document.getElementById('quickAmount').addEventListener('input', calculateDiff);
+document.getElementById('quickAccount').addEventListener('change', calculateDiff);
+
+async function updateWaterBalance() {
+  const acc = document.getElementById('quickAccount').value;
+  const amt = document.getElementById('quickAmount').value;
+  const msg = document.getElementById('quick-msg');
+  if (!amt) return;
+  msg.innerText = "同步更新中...";
+  try {
+    await fetch(`${GOOGLE_API_URL}?action=updateBalance&accountName=${encodeURIComponent(acc)}&amount=${amt}`);
+    msg.innerText = "✅ 水位已校正完畢！";
+    document.getElementById('quickAmount').value = '';
+    clearDashboardCache();
+    fetchDashboard(true);
+  } catch(e) { msg.innerText = "❌ 更新失敗"; }
+}
+
+// ════════════════════════════════════════
+// 表單邏輯
+// ════════════════════════════════════════
+const categoryMap = {
+  '支出': {
+    '變動支出':       ['娛樂費','交通費','線上購物','實體購物','早餐/午餐/晚餐','點心/宵夜/飲料'],
+    '固定支出':       ['房租','瓦斯費','電信費','燃料費','債務還款','APP訂閱','水費/電費','保險(小孩)','保險(大人)','汽機車牌照稅'],
+    '小孩支出':       ['尿布','健康','娛樂','學雜費'],
+    '甜點支出':       ['運費','手續費','包材進貨','材料進貨'],
+    '選品支出 (零售)': ['手續費','選品進貨','藍新沖銷','國際運費','國內運費','斷貨退款','活動購物金'],
+    '代理支出 (批發)': ['成本','代墊款','斷貨退款','國際運費','國內運費','批發儲值(台幣)']
+  },
+  '收入': {
+    '個人收入':       ['一般','沐光毓師資','沐光毓小幫手'],
+    '甜點收入':       ['實體門市','私訊訂購','表單訂購','PAYUNi 入帳'],
+    '選品收入 (零售)': ['現貨出清','記事本收款','EasyStore 訂單'],
+    '代理收入 (批發)': ['倉庫整理費','代墊款回收','國際運費收回','國內運費收回']
+  }
+};
+
+function setLedger(l) {
+  currentLedger = l;
+  document.getElementById('tab-twd').className = l==='TWD' ? 'ledger-tab active-twd' : 'ledger-tab';
+  document.getElementById('tab-krw').className = l==='KRW' ? 'ledger-tab active-krw' : 'ledger-tab';
+  setType('支出');
+}
+
+function setType(t) {
+  currentType = t;
+  document.getElementById('btn-expense').className = t==='支出' ? 'radio-btn active-expense' : 'radio-btn';
+  document.getElementById('btn-income').className  = t==='收入' ? 'radio-btn active-income'  : 'radio-btn';
+  if (currentLedger === 'TWD') {
+    document.getElementById('subTypeGroup').style.display = 'block';
+    const subs = Object.keys(categoryMap[t]);
+    document.getElementById('subType').innerHTML = subs.map(s=>`<option value="${s}">${s}</option>`).join('');
+    updateCategories();
+  } else {
+    document.getElementById('subTypeGroup').style.display = 'none';
+    document.getElementById('category').innerHTML = t==='支出' ? '<option value="代理下單">代理下單</option>' : '<option value="儲值">儲值</option>';
+    document.getElementById('account').innerHTML  = '<option value="批發網點數">批發網點數</option>';
+  }
+}
+
+function updateCategories() {
+  if (currentLedger === 'KRW') return;
+  const sub  = document.getElementById('subType').value;
+  const cats = categoryMap[currentType][sub];
+  document.getElementById('category').innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  updateAccounts();
+}
+
+function updateAccounts() {
+  if (currentLedger === 'KRW') return;
+  const sub      = document.getElementById('subType').value;
+  const cat      = document.getElementById('category').value;
+  const isES     = cat === 'EasyStore 訂單';
+  const isPayUni = cat === 'PAYUNi 入帳';
+  let list = ['現金','信用卡','Line Pay','iPass Money','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
+  if      (isPayUni)               list = ['銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
+  else if (isES)                   list = ['Line Pay','藍新待撥款','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
+  else if (cat === '記事本收款')    list = ['Line Pay','iPass Money','銀行轉帳 (台新銀行)'];
+  else if (cat === '藍新沖銷')      list = ['銀行轉帳 (中國信託)'];
+  else if (cat === '活動購物金')    list = ['ES購物金'];
+  if (currentType==='收入' || sub.includes('代理')) list = list.filter(i=>i!=='信用卡');
+  list.sort((a,b)=>a.length-b.length);
+  document.getElementById('account').innerHTML = list.map(a=>`<option value="${a}">${a}</option>`).join('');
+  updateFields();
+}
+
+function updateFields() {
+  const cat      = document.getElementById('category').value;
+  const isES     = cat === 'EasyStore 訂單';
+  const isPayUni = cat === 'PAYUNi 入帳';
+  document.getElementById('esFields').style.display         = isES     ? 'block' : 'none';
+  document.getElementById('payuniAutoFields').style.display = isPayUni ? 'block' : 'none';
+  document.getElementById('logisticsGroup').style.display   = (currentType==='支出' && (cat==='國內運費'||cat==='運費')) ? 'block' : 'none';
+  document.getElementById('mainAmountLabel').innerText      = isPayUni ? "銀行實收金額" : (isES ? "商品原價" : "金額");
+}
+
+// ════════════════════════════════════════
+// 送出記帳（速度優化：不等 fetchDashboard 就解鎖按鈕）
+// ════════════════════════════════════════
+const send = async (d,t,st,c,a,am,n) =>
+  fetch(`${GOOGLE_API_URL}?action=add&date=${d}&type=${t}&subType=${st}&category=${c}&account=${a}&amount=${am}&note=${encodeURIComponent(n)}`);
+
+document.getElementById('form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const mainAmt   = parseInt(document.getElementById('amount').value.replace(/\D/g,''))       || 0;
+  const creditAmt = parseInt(document.getElementById('creditAmount').value.replace(/\D/g,'')) || 0;
+  const shipAmt   = parseInt(document.getElementById('shippingAmount').value.replace(/\D/g,''))|| 0;
+  const pShip     = parseInt(document.getElementById('payuniShip').value.replace(/\D/g,''))   || 0;
+  const note      = document.getElementById('note').value;
+  const sub       = currentLedger==='KRW' ? '批發網(韓幣)' : document.getElementById('subType').value;
+  const cat       = document.getElementById('category').value;
+  const acc       = document.getElementById('account').value;
+  const date      = document.getElementById('date').value;
+  const btn       = document.getElementById('submitBtn');
+
+  btn.disabled = true;
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    if (cat === 'PAYUNi 入帳') {
+      const estFee      = Math.round(mainAmt * 0.02);
+      const totalIncome = mainAmt + pShip + estFee;
+      const splitNote   = `[PAYUNi撥款實結: 實收${mainAmt}/扣運${pShip}/估手續${estFee}] ${note}`;
+      await send(date,'收入',sub,cat,acc,totalIncome,splitNote);
+      if (pShip > 0) await send(date,'支出','甜點支出','運費',acc,pShip,`(PAYUNi扣運)${note}`);
+      await send(date,'支出','甜點支出','手續費',acc,estFee,`(PAYUNi估手續)${note}`);
+    } else if (cat === 'EasyStore 訂單') {
+      const paidAmt = mainAmt + shipAmt - creditAmt;
+      const esNote  = `[商${mainAmt}/運${shipAmt}${creditAmt?'/折'+creditAmt:''}] ${note}`;
+      await send(date,'收入',sub,cat,acc,paidAmt,esNote);
+      if (creditAmt > 0) await send(date,'收入',sub,cat,'ES購物金',creditAmt,`(點數)${esNote}`);
+    } else {
+      let finalNote = note;
+      if (document.getElementById('logisticsGroup').style.display==='block')
+        finalNote = `[${document.getElementById('logistics').value}] ${note}`;
+      await send(date,currentType,sub,cat,acc,mainAmt,finalNote);
+    }
+    document.getElementById('amount').value = '';
+    document.getElementById('note').value   = '';
+    // 清快取，背景更新看板，不 block UI
+    clearDashboardCache();
+    fetchDashboard(true);
+    alert("✅ 記帳完畢！");
+  } catch(err) {
+    alert("❌ 失敗，請重試");
+  } finally {
+    btn.disabled = false;
+    document.getElementById('loading').style.display = 'none';
+  }
+});
+
+// ════════════════════════════════════════
+// 快速記帳浮動按鈕
+// ════════════════════════════════════════
+let qeType = '支出', qeOpen = false;
+
+const QE_CAT_MAP = {
+  '支出': ['娛樂費','交通費','線上購物','實體購物','餐飲','點心/飲料','房租','電信費','水電費','燃料費','APP訂閱','保險','債務還款','小孩支出','甜點支出','🥜 DouDou 代理支出'],
+  '收入': ['個人收入','甜點收入','選品收入','代理收入','其他收入']
+};
+const QE_SUBTYPE = {
+  '娛樂費':'變動支出','交通費':'變動支出','線上購物':'變動支出','實體購物':'變動支出','餐飲':'變動支出','點心/飲料':'變動支出',
+  '房租':'固定支出','電信費':'固定支出','水電費':'固定支出','燃料費':'固定支出','APP訂閱':'固定支出','保險':'固定支出','債務還款':'固定支出',
+  '小孩支出':'小孩支出','甜點支出':'甜點支出','DouDou代理支出':'選品支出 (零售)'
+};
+const QE_ACC = {
+  '中國信託':'銀行轉帳 (中國信託)','台新銀行':'銀行轉帳 (台新銀行)',
+  'LINE Bank':'銀行轉帳 (LINE Bank)','LINE Pay Money':'Line Pay',
+  'iPASS Money':'iPass Money','現金':'現金','信用卡':'信用卡'
+};
+
+function qeSetType(t) {
+  qeType = t;
+  document.getElementById('qe-btn-exp').className = 'qe-type-btn'+(t==='支出'?' active-exp':'');
+  document.getElementById('qe-btn-inc').className = 'qe-type-btn'+(t==='收入'?' active-inc':'');
+  document.getElementById('qe-cat').innerHTML = QE_CAT_MAP[t].map(c=>`<option value="${c}">${c}</option>`).join('');
+  qeOnCatChange();
+}
+
+function qeOnCatChange() {
+  const dd = document.getElementById('qe-doudou-section');
+  dd.style.display = document.getElementById('qe-cat').value.includes('DouDou') ? 'flex' : 'none';
+}
+
+function qeToggle() {
+  qeOpen = !qeOpen;
+  document.getElementById('qe-panel').classList.toggle('visible', qeOpen);
+  document.getElementById('qe-toggle').classList.toggle('open', qeOpen);
+  document.getElementById('qe-toggle-icon').textContent = qeOpen ? '+' : '✏️';
+  if (qeOpen) setTimeout(()=>document.getElementById('qe-amount').focus(), 120);
+}
+
+async function qeSubmit() {
+  const amount  = parseInt(document.getElementById('qe-amount').value) || 0;
+  const cat     = document.getElementById('qe-cat').value;
+  const account = document.getElementById('qe-account').value;
+  const note    = document.getElementById('qe-note').value.trim();
+  const msg     = document.getElementById('qe-msg');
+  const btn     = document.getElementById('qe-submit');
+
+  if (!amount || amount <= 0) { msg.style.color='#d84315'; msg.textContent='⚠️ 請輸入金額'; return; }
+
+  let finalCat = cat, finalNote = note;
+  if (cat.includes('DouDou')) {
+    const sub = document.getElementById('qe-doudou-sub').value;
+    finalCat  = 'DouDou代理支出';
+    finalNote = `[DouDou-${sub}] ${note}`.trim();
+  }
+
+  const subType     = QE_SUBTYPE[finalCat] || '變動支出';
+  const finalAccount= QE_ACC[account] || account;
+  const today       = new Date().toISOString().slice(0,10);
+
+  btn.disabled = true;
+  msg.style.color = '#795548'; msg.textContent = '同步中...';
+
+  try {
+    await fetch(`${GOOGLE_API_URL}?action=add&date=${today}&type=${encodeURIComponent(qeType)}&subType=${encodeURIComponent(subType)}&category=${encodeURIComponent(finalCat)}&account=${encodeURIComponent(finalAccount)}&amount=${amount}&note=${encodeURIComponent(finalNote)}`);
+    msg.style.color = '#558b2f'; msg.textContent = '✅ 記帳完成！';
+    document.getElementById('qe-amount').value = '';
+    document.getElementById('qe-note').value   = '';
+    clearDashboardCache();
+    fetchDashboard(true);
+    setTimeout(()=>{ msg.textContent=''; }, 2200);
+  } catch(e) {
+    msg.style.color = '#d84315'; msg.textContent = '❌ 連線失敗，請重試';
+  } finally { btn.disabled = false; }
+}
+
+// ════════════════════════════════════════
+// 初始化
+// ════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  fetchDashboard();   // 有快取馬上顯示，沒有才等 GAS
+  setLedger('TWD');
   qeSetType('支出');
-})();
+});
 </script>
 </body>
 </html>
