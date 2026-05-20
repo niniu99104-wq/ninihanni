@@ -76,5 +76,379 @@
     </form>
 </div>
 <script src="script.js"></script>
+    <!-- 快速記帳浮動按鈕 — 貼在 </body> 前即可 -->
+
+<style>
+#qe-fab {
+  position: fixed;
+  bottom: 28px;
+  right: 22px;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+#qe-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
+  border: none;
+  box-shadow: 0 4px 18px rgba(78,52,46,0.38);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
+  outline: none;
+}
+#qe-toggle:hover { transform: scale(1.09); box-shadow: 0 6px 24px rgba(78,52,46,0.48); }
+#qe-toggle.open  { transform: rotate(45deg) scale(1.05); }
+
+#qe-panel {
+  display: none;
+  flex-direction: column;
+  background: #fdfaf6;
+  border: 1.5px solid #d7ccc8;
+  border-radius: 20px;
+  box-shadow: 0 8px 36px rgba(141,110,99,0.22);
+  width: 320px;
+  overflow: hidden;
+  animation: qe-slide-in 0.26s cubic-bezier(.34,1.4,.64,1) both;
+  transform-origin: bottom right;
+}
+#qe-panel.visible { display: flex; }
+
+@keyframes qe-slide-in {
+  from { opacity: 0; transform: scale(0.82) translateY(18px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+#qe-header {
+  background: linear-gradient(135deg, #4e342e 0%, #6d4c41 100%);
+  padding: 14px 18px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#qe-header span { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+#qe-header small { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; display: block; }
+
+#qe-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+.qe-type-row {
+  display: flex;
+  gap: 6px;
+}
+.qe-type-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px solid #d7ccc8;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #795548;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.qe-type-btn.active-exp { background: #fbe9e7; border-color: #d84315; color: #d84315; }
+.qe-type-btn.active-inc { background: #f1f8e9; border-color: #558b2f; color: #558b2f; }
+
+.qe-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #795548;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.qe-select, .qe-input {
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid #d7ccc8;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  color: #3e2723;
+  font-family: inherit;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.18s;
+  box-sizing: border-box;
+}
+.qe-select:focus, .qe-input:focus { border-color: #8d6e63; }
+
+.qe-input-amount {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: right;
+  letter-spacing: 0.5px;
+}
+.qe-input-amount::placeholder { font-size: 14px; font-weight: 400; }
+
+#qe-doudou-section {
+  background: #fff9f0;
+  border: 1.5px dashed #ffb74d;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+#qe-doudou-section .qe-doudou-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e65100;
+  margin-bottom: 2px;
+}
+
+#qe-submit {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #6d4c41 0%, #4e342e 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: opacity 0.15s, transform 0.15s;
+}
+#qe-submit:active { transform: scale(0.98); opacity: 0.9; }
+#qe-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#qe-msg {
+  font-size: 12px;
+  text-align: center;
+  min-height: 16px;
+  font-weight: 600;
+  color: #558b2f;
+}
+
+.qe-row { display: flex; flex-direction: column; }
+</style>
+
+<!-- 浮動按鈕主體 -->
+<div id="qe-fab">
+
+  <!-- 面板 -->
+  <div id="qe-panel">
+    <div id="qe-header">
+      <div>
+        <span>⚡ 快速記帳</span>
+        <small>記完自動同步看板</small>
+      </div>
+    </div>
+
+    <div id="qe-body">
+
+      <!-- 收支切換 -->
+      <div class="qe-type-row">
+        <button class="qe-type-btn active-exp" id="qe-btn-exp" onclick="qeSetType('支出')">💸 支出</button>
+        <button class="qe-type-btn"            id="qe-btn-inc" onclick="qeSetType('收入')">💰 收入</button>
+      </div>
+
+      <!-- 金額 -->
+      <div class="qe-row">
+        <label class="qe-label">金額（NT$）</label>
+        <input class="qe-input qe-input-amount" type="number" id="qe-amount" inputmode="numeric" placeholder="0">
+      </div>
+
+      <!-- 大類別 -->
+      <div class="qe-row">
+        <label class="qe-label">類別</label>
+        <select class="qe-select" id="qe-cat" onchange="qeOnCatChange()"></select>
+      </div>
+
+      <!-- DouDou 代理細項（條件顯示） -->
+      <div id="qe-doudou-section">
+        <div class="qe-doudou-title">🥜 DouDou 代理細項</div>
+        <select class="qe-select" id="qe-doudou-sub">
+          <option value="批發網下單">批發網下單（台幣）</option>
+          <option value="國際運費">國際運費</option>
+          <option value="國內運費">國內運費</option>
+          <option value="整理費">整理費</option>
+          <option value="代理儲值入帳">代理儲值入帳</option>
+        </select>
+      </div>
+
+      <!-- 帳戶 -->
+      <div class="qe-row">
+        <label class="qe-label">帳戶</label>
+        <select class="qe-select" id="qe-account">
+          <option value="中國信託">中國信託（現金卡）</option>
+          <option value="台新銀行">台新銀行</option>
+          <option value="LINE Bank">LINE Bank</option>
+          <option value="LINE Pay Money">LINE Pay Money</option>
+          <option value="iPASS Money">iPASS Money</option>
+          <option value="現金">現金</option>
+          <option value="信用卡">信用卡</option>
+        </select>
+      </div>
+
+      <!-- 備註 -->
+      <div class="qe-row">
+        <label class="qe-label">備註（選填）</label>
+        <input class="qe-input" type="text" id="qe-note" placeholder="寫點什麼...">
+      </div>
+
+      <!-- 送出 -->
+      <div id="qe-msg"></div>
+      <button id="qe-submit" onclick="qeSubmit()">⚡ 記一筆</button>
+
+    </div>
+  </div>
+
+  <!-- FAB 按鈕 -->
+  <button id="qe-toggle" onclick="qeToggle()" aria-label="快速記帳">
+    <span id="qe-toggle-icon">✏️</span>
+  </button>
+</div>
+
+<script>
+(function(){
+  let qeType = '支出';
+  let qeOpen = false;
+
+  const QE_CAT_MAP = {
+    '支出': [
+      '娛樂費', '交通費', '線上購物', '實體購物',
+      '餐飲', '點心/飲料',
+      '房租', '電信費', '水電費', '燃料費',
+      'APP訂閱', '保險', '債務還款',
+      '小孩支出', '甜點支出',
+      '🥜 DouDou 代理支出'
+    ],
+    '收入': [
+      '個人收入', '甜點收入', '選品收入', '代理收入', '其他收入'
+    ]
+  };
+
+  function qeSetType(t) {
+    qeType = t;
+    document.getElementById('qe-btn-exp').className = 'qe-type-btn' + (t==='支出' ? ' active-exp' : '');
+    document.getElementById('qe-btn-inc').className = 'qe-type-btn' + (t==='收入' ? ' active-inc' : '');
+    const sel = document.getElementById('qe-cat');
+    sel.innerHTML = QE_CAT_MAP[t].map(c => `<option value="${c}">${c}</option>`).join('');
+    qeOnCatChange();
+  }
+  window.qeSetType = qeSetType;
+
+  function qeOnCatChange() {
+    const cat = document.getElementById('qe-cat').value;
+    const dd  = document.getElementById('qe-doudou-section');
+    dd.style.display = cat.includes('DouDou') ? 'flex' : 'none';
+  }
+  window.qeOnCatChange = qeOnCatChange;
+
+  function qeToggle() {
+    qeOpen = !qeOpen;
+    const panel  = document.getElementById('qe-panel');
+    const toggle = document.getElementById('qe-toggle');
+    const icon   = document.getElementById('qe-toggle-icon');
+    if (qeOpen) {
+      panel.classList.add('visible');
+      toggle.classList.add('open');
+      icon.textContent = '+';
+      setTimeout(() => document.getElementById('qe-amount').focus(), 120);
+    } else {
+      panel.classList.remove('visible');
+      toggle.classList.remove('open');
+      icon.textContent = '✏️';
+    }
+  }
+  window.qeToggle = qeToggle;
+
+  async function qeSubmit() {
+    const amount  = parseInt(document.getElementById('qe-amount').value) || 0;
+    const cat     = document.getElementById('qe-cat').value;
+    const account = document.getElementById('qe-account').value;
+    const note    = document.getElementById('qe-note').value.trim();
+    const msg     = document.getElementById('qe-msg');
+    const btn     = document.getElementById('qe-submit');
+
+    if (!amount || amount <= 0) {
+      msg.style.color = '#d84315';
+      msg.textContent = '⚠️ 請輸入金額';
+      return;
+    }
+
+    // 組合備註：如果是 DouDou 類別就帶入細項
+    let finalNote = note;
+    let finalCat  = cat;
+    if (cat.includes('DouDou')) {
+      const sub = document.getElementById('qe-doudou-sub').value;
+      finalCat  = 'DouDou代理支出';
+      finalNote = `[DouDou-${sub}] ${note}`.trim();
+    }
+
+    // 決定 subType（對應你原本系統的分類）
+    const subTypeMap = {
+      '娛樂費':'變動支出','交通費':'變動支出','線上購物':'變動支出',
+      '實體購物':'變動支出','餐飲':'變動支出','點心/飲料':'變動支出',
+      '房租':'固定支出','電信費':'固定支出','水電費':'固定支出',
+      '燃料費':'固定支出','APP訂閱':'固定支出','保險':'固定支出','債務還款':'固定支出',
+      '小孩支出':'小孩支出',
+      '甜點支出':'甜點支出',
+      'DouDou代理支出':'選品支出 (零售)',
+    };
+    const subType = subTypeMap[finalCat] || '變動支出';
+
+    // 帳戶名稱對應
+    const accMap = {
+      '中國信託': '銀行轉帳 (中國信託)',
+      '台新銀行': '銀行轉帳 (台新銀行)',
+      'LINE Bank': '銀行轉帳 (LINE Bank)',
+      'LINE Pay Money': 'Line Pay',
+      'iPASS Money': 'iPass Money',
+      '現金': '現金',
+      '信用卡': '信用卡',
+    };
+    const finalAccount = accMap[account] || account;
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    btn.disabled = true;
+    msg.style.color = '#795548';
+    msg.textContent = '同步中...';
+
+    try {
+      await fetch(GOOGLE_API_URL +
+        `?action=add` +
+        `&date=${today}` +
+        `&type=${encodeURIComponent(qeType)}` +
+        `&subType=${encodeURIComponent(subType)}` +
+        `&category=${encodeURIComponent(finalCat)}` +
+        `&account=${encodeURIComponent(finalAccount)}` +
+        `&amount=${amount}` +
+        `&note=${encodeURIComponent(finalNote)}`
+      );
+      msg.style.color = '#558b2f';
+      msg.textContent = '✅ 記帳完成！';
+      document.getElementById('qe-amount').value = '';
+      document.getElementById('qe-note').value   = '';
+      if (typeof fetchDashboard === 'function') fetchDashboard();
+      setTimeout(() => { msg.textContent = ''; }, 2200);
+    } catch(e) {
+      msg.style.color = '#d84315';
+      msg.textContent = '❌ 連線失敗，請重試';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  window.qeSubmit = qeSubmit;
+
+  // 初始化類別
+  qeSetType('支出');
+})();
+</script>
 </body>
 </html>
