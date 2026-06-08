@@ -147,10 +147,14 @@ select,input[type=number],input[type=date],input[type=text]{width:100%;padding:1
       <div class="status-sub"><div class="status-sub-label">淨現金</div><div class="status-sub-val" id="s-net">--</div></div>
       <div class="status-sub"><div class="status-sub-label">本月應繳</div><div class="status-sub-val" id="s-payable">--</div></div>
     </div>
-    <div class="status-row">
+    <div class="status-row" style="margin-bottom:8px">
       <div class="status-sub"><div class="status-sub-label">本月收入</div><div class="status-sub-val" id="s-income">--</div></div>
       <div class="status-sub"><div class="status-sub-label">本月支出</div><div class="status-sub-val" id="s-expense">--</div></div>
       <div class="status-sub"><div class="status-sub-label">待付貨款</div><div class="status-sub-val" id="s-debt">--</div></div>
+    </div>
+    <div style="background:rgba(255,100,100,0.15);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:11px;opacity:0.8">📥 未收回款項</div>
+      <div style="font-size:15px;font-weight:700" id="s-receivable">--</div>
     </div>
   </div>
 
@@ -199,6 +203,17 @@ select,input[type=number],input[type=date],input[type=text]{width:100%;padding:1
     </div>
     <div class="divider"></div>
     <div class="acc-row"><div class="acc-name" style="color:var(--red)">💳 信貸／信用卡</div><div class="acc-val neg" id="a-loan">--</div></div>
+  </div>
+
+  <div class="acc-card">
+    <div class="acc-title">📥 未收回款項</div>
+    <div id="recv-list"><div style="font-size:13px;color:var(--text3);padding:10px 0">讀取中…</div></div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <input id="recv-item" placeholder="說明" style="flex:2;margin:0;padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-family:inherit;outline:none;">
+      <input id="recv-amt" type="number" placeholder="金額" style="flex:1;margin:0;padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-family:inherit;outline:none;text-align:right;">
+      <input id="recv-date" type="date" style="flex:1;margin:0;padding:8px 10px;font-size:12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--surface);color:var(--text);font-family:inherit;outline:none;">
+    </div>
+    <button onclick="addReceivable()" style="width:100%;margin-top:8px;padding:10px;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red);border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">＋ 新增未收回</button>
   </div>
 
   <div class="acc-card">
@@ -420,6 +435,7 @@ function renderDash(d){
   document.getElementById('s-income').textContent=fmt(d.monthIncome);
   document.getElementById('s-expense').textContent=fmt(d.monthExpense);
   document.getElementById('s-debt').textContent=fmt(parseInt(String(d.debt).replace(/[^0-9]/g,''))||0);
+  document.getElementById('s-receivable').textContent=fmt(d.receivable||0);
   if(d.krwRate)document.getElementById('krw-input').value=d.krwRate;
   const accs=d.accounts||{};
   Object.entries(ACC_MAP).forEach(([name,id])=>{
@@ -667,7 +683,46 @@ async function submitAdv(){
   btn.disabled=false;
 }
 
-initDate();loadData(false);
+// 未收回款項
+async function loadReceivables(){
+  try{
+    const r=await fetch(API+'?action=getReceivables');
+    const d=await r.json();
+    const list=document.getElementById('recv-list');
+    if(!d.items||!d.items.length){list.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0">目前沒有未收回款項</div>';return;}
+    list.innerHTML=d.items.map(i=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div>
+          <div style="color:var(--text)">${i.item}</div>
+          <div style="font-size:11px;color:var(--text3)">${i.dueDate||'未設日期'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-weight:700;color:var(--red)">$${Math.round(i.amount).toLocaleString()}</div>
+          <button onclick="deleteReceivable(${i.row})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px">×</button>
+        </div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+async function addReceivable(){
+  const item=document.getElementById('recv-item').value.trim();
+  const amt=parseFloat(document.getElementById('recv-amt').value)||0;
+  const date=document.getElementById('recv-date').value;
+  if(!item||!amt){alert('請填寫說明和金額');return;}
+  await fetch(`${API}?action=addReceivable&item=${encodeURIComponent(item)}&amount=${amt}&dueDate=${encodeURIComponent(date)}`);
+  document.getElementById('recv-item').value='';
+  document.getElementById('recv-amt').value='';
+  document.getElementById('recv-date').value='';
+  cc();loadData(true);loadReceivables();
+}
+
+async function deleteReceivable(row){
+  if(!confirm('確定刪除這筆未收回款項？'))return;
+  await fetch(`${API}?action=deleteReceivable&row=${row}`);
+  cc();loadData(true);loadReceivables();
+}
+
+initDate();loadData(false);loadReceivables();
 </script>
 </body>
 </html>
