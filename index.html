@@ -5,989 +5,661 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>☘️ 霓要記得記帳</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+:root{
+  --bg:#F5F0E8;--surface:#FFFDF9;--surface2:#F0EBE0;
+  --border:rgba(139,115,85,0.15);--border2:rgba(139,115,85,0.3);
+  --text:#3A2E22;--text2:#7A6A55;--text3:#A89880;
+  --accent:#8B7355;--accent2:#6B5840;
+  --green:#4A7C59;--green-bg:#EDF5F0;--green-text:#2D5E3A;
+  --red:#B85450;--red-bg:#FAEAEA;--red-text:#8B2E2A;
+  --warn:#C47B2B;--warn-bg:#FDF3E3;--warn-text:#8B5010;
+  --blue:#4A6B8B;--blue-bg:#EDF2F8;--blue-text:#2D4E6B;
+  --r:16px;--rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
 
-:root {
-  --bg: #F5F0E8;
-  --surface: #FFFDF9;
-  --surface2: #F0EBE0;
-  --border: rgba(139,115,85,0.15);
-  --border2: rgba(139,115,85,0.3);
-  --text: #3A2E22;
-  --text2: #7A6A55;
-  --text3: #A89880;
-  --accent: #8B7355;
-  --accent2: #6B5840;
-  --green: #4A7C59;
-  --green-bg: #EDF5F0;
-  --green-text: #2D5E3A;
-  --red: #B85450;
-  --red-bg: #FAEAEA;
-  --red-text: #8B2E2A;
-  --warn: #C47B2B;
-  --warn-bg: #FDF3E3;
-  --warn-text: #8B5010;
-  --blue: #4A6B8B;
-  --blue-bg: #EDF2F8;
-  --blue-text: #2D4E6B;
-  --radius: 14px;
-  --radius-sm: 8px;
-}
+.top{background:var(--accent2);padding:16px 20px 14px;display:flex;justify-content:space-between;align-items:center;}
+.top-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:1px;}
+.top-date{font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;}
+.refresh{background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+.main{padding:16px;}
 
-body {
-  font-family: 'Noto Sans TC', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  padding-bottom: 100px;
-}
+/* 狀態卡 */
+.status-card{background:var(--accent2);border-radius:var(--r);padding:20px;margin-bottom:16px;color:#fff;}
+.status-label{font-size:12px;opacity:0.7;margin-bottom:4px;}
+.status-num{font-size:40px;font-weight:700;letter-spacing:-1px;margin-bottom:16px;}
+.status-num.ok{color:#7DDFAA;}.status-num.warn{color:#FFD080;}.status-num.danger{color:#FF8A80;}
+.status-row{display:flex;gap:8px;}
+.status-sub{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 10px;}
+.status-sub-label{font-size:10px;opacity:0.7;margin-bottom:2px;}
+.status-sub-val{font-size:14px;font-weight:700;}
 
-/* ── 頂部 ── */
-.top-bar {
-  background: var(--accent2);
-  padding: 18px 20px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.top-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 1px; }
-.top-date { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-.refresh-btn {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  border-radius: 50%;
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #fff; font-size: 16px;
-  transition: background 0.2s;
-}
-.refresh-btn:active { background: rgba(255,255,255,0.3); }
+.alert{border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-bottom:12px;line-height:1.5;}
+.alert.danger{background:var(--red-bg);color:var(--red-text);}
+.alert.warn{background:var(--warn-bg);color:var(--warn-text);}
+.alert.ok{background:var(--green-bg);color:var(--green-text);}
+.alert.info{background:var(--blue-bg);color:var(--blue-text);}
 
-/* ── 頁籤 ── */
-.tabs {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 68px;
-  z-index: 99;
-}
-.tab {
-  flex: 1;
-  padding: 12px 0;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text3);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-.tab.active {
-  color: var(--accent2);
-  border-bottom-color: var(--accent2);
-}
+/* 四大按鈕 */
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.big-btn{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:18px 12px;text-align:center;cursor:pointer;}
+.big-btn:active{transform:scale(0.96);}
+.big-btn-icon{font-size:28px;margin-bottom:6px;}
+.big-btn-label{font-size:14px;font-weight:700;color:var(--text);}
+.big-btn-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 
-/* ── 頁面 ── */
-.page { display: none; padding: 16px; }
-.page.active { display: block; }
+.adv-btn{width:100%;background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--rs);padding:12px;text-align:center;font-size:13px;color:var(--text3);cursor:pointer;margin-bottom:16px;font-family:inherit;}
 
-/* ── 卡片 ── */
-.card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 16px;
-  margin-bottom: 12px;
-}
-.card-title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text3);
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-}
+/* 帳戶卡 */
+.acc-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;}
+.acc-title{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;margin-bottom:10px;text-transform:uppercase;}
+.acc-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.acc-row:last-child{border-bottom:none;}
+.acc-name{color:var(--text2);}
+.acc-val{font-weight:700;color:var(--text);}
+.acc-val.lock{color:var(--warn);}.acc-val.neg{color:var(--red);}
+.divider{height:1px;background:var(--border);margin:6px 0;}
+.krw-row{display:flex;align-items:center;gap:6px;}
+.krw-row input{width:65px;margin:0;padding:4px 8px;font-size:12px;text-align:right;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:inherit;}
+.krw-row button{padding:4px 8px;font-size:11px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);cursor:pointer;font-family:inherit;color:var(--text2);}
 
-/* ── 大數字 ── */
-.big-num {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text);
-}
-.big-num.ok { color: var(--green); }
-.big-num.danger { color: var(--red); }
-.big-num.warn { color: var(--warn); }
+/* 彈出層 */
+.overlay{display:none;position:fixed;inset:0;background:rgba(58,46,34,0.5);z-index:200;align-items:flex-end;}
+.overlay.show{display:flex;}
+.sheet{background:var(--surface);border-radius:var(--r) var(--r) 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;animation:su 0.22s ease;}
+@keyframes su{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.sheet-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.sheet-close{background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;}
 
-/* ── 指標格 ── */
-.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.metric {
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  text-align: center;
-}
-.metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
-.metric-val { font-size: 18px; font-weight: 700; }
+/* 數字顯示 */
+.amt-display{background:var(--surface2);border-radius:var(--rs);padding:14px 16px;font-size:32px;font-weight:700;color:var(--text3);text-align:right;margin-bottom:12px;min-height:60px;letter-spacing:-1px;}
+.amt-display.has-val{color:var(--accent2);}
 
-/* ── 警示橫幅 ── */
-.alert {
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-.alert.danger { background: var(--red-bg); color: var(--red-text); }
-.alert.warn { background: var(--warn-bg); color: var(--warn-text); }
-.alert.ok { background: var(--green-bg); color: var(--green-text); }
-.alert.info { background: var(--blue-bg); color: var(--blue-text); }
+/* 數字鍵盤 */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.num-btn{background:var(--surface2);border:none;border-radius:var(--rs);padding:16px;font-size:18px;font-weight:500;color:var(--text);cursor:pointer;font-family:inherit;text-align:center;}
+.num-btn:active{background:var(--border2);}
+.num-btn.zero{grid-column:span 2;}
 
-/* ── 列表項目 ── */
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.list-item:last-child { border-bottom: none; }
-.list-item-left { flex: 1; }
-.list-item-name { font-size: 14px; color: var(--text); }
-.list-item-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.list-item-right { text-align: right; }
-.list-item-amt { font-size: 15px; font-weight: 700; }
-.list-item-amt.income { color: var(--green); }
-.list-item-amt.expense { color: var(--red); }
-.list-item-amt.warn { color: var(--warn); }
+.section-label{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:6px;letter-spacing:0.3px;text-transform:uppercase;}
 
-/* ── 固定支出進度 ── */
-.fixed-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.fixed-item:last-child { border-bottom: none; }
-.fixed-name { font-size: 13px; color: var(--text); }
-.fixed-amt { font-size: 13px; font-weight: 700; color: var(--text2); }
-.fixed-tag {
-  font-size: 10px;
-  padding: 2px 7px;
-  border-radius: 4px;
-  margin-left: 6px;
-}
-.fixed-tag.paid { background: var(--green-bg); color: var(--green-text); }
-.fixed-tag.due { background: var(--warn-bg); color: var(--warn-text); }
+/* 類別選項 */
+.sub-cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.sub-cat{padding:7px 13px;border:1px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);font-family:inherit;}
+.sub-cat.selected{background:var(--accent2);color:#fff;border-color:var(--accent2);}
 
-/* ── 表單 ── */
-label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
-input, select, textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  font-family: inherit;
-  background: var(--surface);
-  color: var(--text);
-  margin-bottom: 12px;
-  outline: none;
-  -webkit-appearance: none;
-}
-input:focus, select:focus { border-color: var(--accent); }
+/* 收支切換（食育課用） */
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.type-btn{padding:10px;border:1.5px solid var(--border2);border-radius:var(--rs);text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--text2);font-family:inherit;}
+.type-btn.exp{background:var(--red-bg);border-color:var(--red);color:var(--red-text);}
+.type-btn.inc{background:var(--green-bg);border-color:var(--green);color:var(--green-text);}
 
-/* 收支切換 */
-.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.type-btn {
-  padding: 12px;
-  border: 1.5px solid var(--border2);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: var(--surface);
-  color: var(--text2);
-  transition: all 0.15s;
-  font-family: inherit;
-}
-.type-btn.active-exp { background: var(--red-bg); border-color: var(--red); color: var(--red-text); }
-.type-btn.active-inc { background: var(--green-bg); border-color: var(--green); color: var(--green-text); }
+/* 帳戶選項 */
+.acc-opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.acc-opt{padding:7px 13px;border:1px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);font-family:inherit;}
+.acc-opt.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-/* 帳本切換 */
-.ledger-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.ledger-btn {
-  padding: 10px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  background: var(--surface);
-  color: var(--text3);
-  font-family: inherit;
-}
-.ledger-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.note-input{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);margin-bottom:12px;outline:none;}
+.note-input:focus{border-color:var(--accent);}
 
-/* 送出按鈕 */
-.submit-btn {
-  width: 100%;
-  padding: 14px;
-  background: var(--accent2);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  transition: opacity 0.15s;
-}
-.submit-btn:active { opacity: 0.8; }
-.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit{width:100%;padding:14px;background:var(--accent2);color:#fff;border:none;border-radius:var(--rs);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;}
+.submit:active{opacity:0.8;}.submit:disabled{opacity:0.4;}
+.sync-msg{font-size:12px;text-align:center;min-height:16px;margin-bottom:8px;font-weight:500;}
 
-/* 校正按鈕 */
-.sec-btn {
-  width: 100%;
-  padding: 10px;
-  background: var(--surface2);
-  color: var(--text2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  margin-top: 4px;
-}
-.sec-btn:active { opacity: 0.7; }
-
-/* 代理徽章 */
-.badge {
-  display: inline-block;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
-  font-weight: 500;
-}
-.badge.active { background: var(--green-bg); color: var(--green-text); }
-.badge.blocked { background: var(--red-bg); color: var(--red-text); }
-
-/* 分隔線 */
-.divider { height: 1px; background: var(--border); margin: 12px 0; }
-
-/* 校正區 */
-.balance-check { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; }
-.balance-row { display: flex; gap: 8px; }
-.balance-row select { flex: 1; margin-bottom: 0; }
-.balance-row input { flex: 1; margin-bottom: 0; }
-.diff-msg { font-size: 12px; text-align: center; margin-top: 8px; min-height: 16px; font-weight: 500; color: var(--text3); }
-
-/* 帳戶列表 */
-.account-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-.account-row:last-child { border-bottom: none; }
-.account-name { color: var(--text2); }
-.account-val { font-weight: 700; color: var(--text); }
-.account-val.protected { color: var(--warn); }
-
-/* loading */
-.loading-msg { text-align: center; font-size: 13px; color: var(--text3); padding: 20px; }
-
-/* 浮動記帳按鈕 */
-#fab {
-  position: fixed;
-  bottom: 24px;
-  right: 20px;
-  z-index: 999;
-}
-#fab-btn {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--accent2);
-  border: none;
-  box-shadow: 0 4px 20px rgba(107,88,64,0.4);
-  cursor: pointer;
-  font-size: 22px;
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  transition: transform 0.2s;
-}
-#fab-btn:active { transform: scale(0.93); }
-
-/* 快速記帳面板 */
-#quick-panel {
-  display: none;
-  position: fixed;
-  bottom: 90px;
-  right: 16px;
-  width: calc(100vw - 32px);
-  max-width: 360px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border2);
-  box-shadow: 0 8px 40px rgba(58,46,34,0.18);
-  z-index: 998;
-  padding: 16px;
-  animation: slideUp 0.22s ease;
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-#quick-panel .panel-title {
-  font-size: 14px; font-weight: 700; color: var(--text);
-  margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
-}
-#quick-panel .close-btn {
-  background: none; border: none; font-size: 20px; color: var(--text3); cursor: pointer;
-}
-#qmsg { font-size: 12px; text-align: center; min-height: 16px; font-weight: 500; margin-bottom: 8px; }
-
-/* 特殊欄位區 */
-.special-box {
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  border: 1px dashed var(--border2);
-  margin-bottom: 12px;
-}
-.special-box label { color: var(--text3); margin-bottom: 4px; }
-.special-box input { margin-bottom: 0; }
+/* 進階彈出層 */
+.adv-overlay{display:none;position:fixed;inset:0;background:rgba(58,46,34,0.5);z-index:300;align-items:flex-end;}
+.adv-overlay.show{display:flex;}
+.adv-sheet{background:var(--surface);border-radius:var(--r) var(--r) 0 0;padding:20px;width:100%;max-height:92vh;overflow-y:auto;animation:su 0.22s ease;}
+label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+select,input[type=number],input[type=date],input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);margin-bottom:12px;outline:none;-webkit-appearance:none;}
+.toggle2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.tbtn{padding:10px;border:1.5px solid var(--border2);border-radius:var(--rs);text-align:center;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--text2);font-family:inherit;}
+.tbtn.exp{background:var(--red-bg);border-color:var(--red);color:var(--red-text);}
+.tbtn.inc{background:var(--green-bg);border-color:var(--green);color:var(--green-text);}
+.tbtn.sel{background:var(--accent);color:#fff;border-color:var(--accent);}
+.special-box{background:var(--surface2);border-radius:var(--rs);padding:10px 12px;border:1px dashed var(--border2);margin-bottom:12px;}
+.special-box label{color:var(--text3);}
+.adv-sheet-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.sheet-btn{padding:6px 12px;border:1px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);font-family:inherit;}
+.sheet-btn.sel{background:var(--accent2);color:#fff;border-color:var(--accent2);}
 </style>
 </head>
 <body>
 
-<div class="top-bar">
+<div class="top">
   <div>
     <div class="top-title">☘️ 霓要記得記帳</div>
     <div class="top-date" id="top-date"></div>
   </div>
-  <button class="refresh-btn" onclick="loadDashboard(true)" title="重新整理">↺</button>
+  <button class="refresh" onclick="loadData(true)">↺</button>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="switchPage('home')">總覽</div>
-  <div class="tab" onclick="switchPage('ledger')">記帳</div>
-  <div class="tab" onclick="switchPage('agent')">代理</div>
-  <div class="tab" onclick="switchPage('fixed')">固定</div>
-</div>
+<div class="main">
+  <div id="alert-area"></div>
 
-<!-- ══ 總覽頁 ══ -->
-<div class="page active" id="page-home">
+  <div class="status-card">
+    <div class="status-label">現在可用（淨現金）</div>
+    <div class="status-num" id="s-net">讀取中…</div>
+    <div class="status-row">
+      <div class="status-sub"><div class="status-sub-label">本月收入</div><div class="status-sub-val" id="s-income">--</div></div>
+      <div class="status-sub"><div class="status-sub-label">本月支出</div><div class="status-sub-val" id="s-expense">--</div></div>
+      <div class="status-sub"><div class="status-sub-label">待付貨款</div><div class="status-sub-val" id="s-debt">--</div></div>
+    </div>
+  </div>
 
-  <div id="alerts-area"></div>
+  <div class="btn-grid">
+    <div class="big-btn" onclick="openSheet('buy')">
+      <div class="big-btn-icon">🛍️</div>
+      <div class="big-btn-label">買東西</div>
+      <div class="big-btn-sub">個人／小孩／訂閱</div>
+    </div>
+    <div class="big-btn" onclick="openSheet('receive')">
+      <div class="big-btn-icon">💰</div>
+      <div class="big-btn-label">收款</div>
+      <div class="big-btn-sub">選品／代理</div>
+    </div>
+    <div class="big-btn" onclick="openSheet('pay')">
+      <div class="big-btn-icon">📦</div>
+      <div class="big-btn-label">付廠商</div>
+      <div class="big-btn-sub">貨款／運費</div>
+    </div>
+    <div class="big-btn" onclick="openSheet('food')">
+      <div class="big-btn-icon">🍳</div>
+      <div class="big-btn-label">食育課</div>
+      <div class="big-btn-sub">收入／材料支出</div>
+    </div>
+  </div>
 
-  <div class="card">
-    <div class="card-title">可用淨現金</div>
-    <div class="big-num" id="h-netcash">讀取中…</div>
+  <button class="adv-btn" onclick="openAdv()">⚙️ 進階記帳（甜點、選品、代理批發…）</button>
+
+  <div class="acc-card">
+    <div class="acc-title">帳戶餘額</div>
+    <div class="acc-row"><div class="acc-name">台新銀行</div><div class="acc-val" id="a-taishin">--</div></div>
+    <div class="acc-row"><div class="acc-name">中國信託</div><div class="acc-val" id="a-ctbc">--</div></div>
+    <div class="acc-row"><div class="acc-name">國泰世華</div><div class="acc-val" id="a-cathay">--</div></div>
+    <div class="acc-row"><div class="acc-name">LINE Bank</div><div class="acc-val" id="a-linebank">--</div></div>
+    <div class="acc-row"><div class="acc-name">LINE Pay Money</div><div class="acc-val" id="a-linepay">--</div></div>
+    <div class="acc-row"><div class="acc-name">iPASS Money</div><div class="acc-val" id="a-ipass">--</div></div>
+    <div class="acc-row"><div class="acc-name">其他／現金</div><div class="acc-val" id="a-cash">--</div></div>
     <div class="divider"></div>
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-label">總資產</div>
-        <div class="metric-val" id="h-asset">--</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">待付貨款</div>
-        <div class="metric-val" style="color:var(--red)" id="h-debt">--</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">本月收入</div>
-        <div class="metric-val" style="color:var(--green)" id="h-income">--</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">本月支出</div>
-        <div class="metric-val" style="color:var(--red)" id="h-expense">--</div>
+    <div class="acc-row"><div class="acc-name">🔒 批發網點數</div><div class="acc-val lock" id="a-krw">--</div></div>
+    <div class="acc-row">
+      <div class="acc-name" style="font-size:12px;color:var(--text3)">韓幣匯率</div>
+      <div class="krw-row">
+        <input type="number" id="krw-input" placeholder="40">
+        <button onclick="saveRate()">更新</button>
       </div>
     </div>
+    <div class="divider"></div>
+    <div class="acc-row"><div class="acc-name" style="color:var(--red)">💳 信貸／信用卡</div><div class="acc-val neg" id="a-loan">--</div></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">代理儲值（不可動）</div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name">一般儲值金合計</div></div>
-      <div class="list-item-amt warn" id="h-agent-c">讀取中…</div>
-    </div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name">批發網儲值金合計</div></div>
-      <div class="list-item-amt warn" id="h-agent-g">讀取中…</div>
-    </div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name" style="font-weight:700">⚠️ 台新需保留</div></div>
-      <div class="list-item-amt warn" id="h-reserve">計算中…</div>
-    </div>
+  <div class="acc-card">
+    <div class="acc-title">代理儲值（不可動）</div>
+    <div class="acc-row"><div class="acc-name">一般儲值金</div><div class="acc-val lock" id="ag-c">--</div></div>
+    <div class="acc-row"><div class="acc-name">批發網儲值金</div><div class="acc-val lock" id="ag-g">--</div></div>
+    <div class="acc-row"><div class="acc-name" style="font-weight:700">⚠️ 台新需保留</div><div class="acc-val lock" id="ag-rsv">--</div></div>
+    <div class="acc-row"><div class="acc-name">國泰世華餘額</div><div class="acc-val" id="ag-cathay">--</div></div>
   </div>
-
-  <div class="card">
-    <div class="card-title">帳戶餘額</div>
-    <div id="account-list"><div class="loading-msg">讀取中…</div></div>
-  </div>
-
 </div>
 
-<!-- ══ 記帳頁 ══ -->
-<div class="page" id="page-ledger">
-
-  <div class="ledger-toggle">
-    <button class="ledger-btn active" id="led-twd" onclick="setLedger('TWD')">🇹🇼 日常台幣</button>
-    <button class="ledger-btn" id="led-krw" onclick="setLedger('KRW')">🇰🇷 批發韓幣</button>
-  </div>
-
-  <div class="type-toggle">
-    <button class="type-btn active-exp" id="btn-exp" onclick="setType('支出')">支出</button>
-    <button class="type-btn" id="btn-inc" onclick="setType('收入')">收入</button>
-  </div>
-
-  <div class="card">
-    <div class="form-group">
-      <label>日期</label>
-      <input type="date" id="f-date">
+<!-- 快速記帳彈出層 -->
+<div class="overlay" id="sheet-overlay" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sheet-title">
+      <span id="sheet-title-text">記一筆</span>
+      <button class="sheet-close" onclick="closeSheetDirect()">×</button>
     </div>
-    <div id="f-subtype-wrap">
-      <label>類型</label>
-      <select id="f-subtype" onchange="updateCats()"></select>
-    </div>
-    <label>類別</label>
-    <select id="f-cat" onchange="updateAccounts()"></select>
-    <div id="f-logistics-wrap" style="display:none">
-      <div class="special-box">
-        <label>📦 物流</label>
-        <select id="f-logistics">
-          <option>賣貨便</option><option>店到店</option><option>郵局配送</option>
-          <option>新竹物流(小物)</option><option>新竹物流(大件)</option>
-        </select>
+
+    <!-- 食育課收支切換 -->
+    <div id="food-toggle" style="display:none">
+      <div class="type-toggle">
+        <button class="type-btn inc" id="food-inc" onclick="foodSetType('收入')">收入（師資費）</button>
+        <button class="type-btn" id="food-exp" onclick="foodSetType('支出')">支出（材料）</button>
       </div>
     </div>
-    <label>帳戶</label>
-    <select id="f-account"></select>
-    <div id="f-es-wrap" style="display:none">
-      <div class="special-box">
-        <label>✨ 使用購物金</label>
-        <input type="number" id="f-credit" placeholder="0">
-        <label style="margin-top:8px">📦 預付運費</label>
-        <input type="number" id="f-ship" placeholder="0">
+
+    <div class="amt-display" id="amt-display">0</div>
+
+    <div class="numpad">
+      <button class="num-btn" onclick="numPress('1')">1</button>
+      <button class="num-btn" onclick="numPress('2')">2</button>
+      <button class="num-btn" onclick="numPress('3')">3</button>
+      <button class="num-btn" onclick="numPress('4')">4</button>
+      <button class="num-btn" onclick="numPress('5')">5</button>
+      <button class="num-btn" onclick="numPress('6')">6</button>
+      <button class="num-btn" onclick="numPress('7')">7</button>
+      <button class="num-btn" onclick="numPress('8')">8</button>
+      <button class="num-btn" onclick="numPress('9')">9</button>
+      <button class="num-btn zero" onclick="numPress('0')">0</button>
+      <button class="num-btn" onclick="numDel()">⌫</button>
+    </div>
+
+    <div class="section-label">類別</div>
+    <div class="sub-cats" id="sub-cats"></div>
+
+    <div class="section-label">帳戶</div>
+    <div class="acc-opts" id="acc-opts"></div>
+
+    <input class="note-input" id="sheet-note" placeholder="備註（選填）">
+    <div class="sync-msg" id="sync-msg"></div>
+    <button class="submit" id="sheet-submit" onclick="submitSheet()">記錄</button>
+  </div>
+</div>
+
+<!-- 進階記帳彈出層 -->
+<div class="adv-overlay" id="adv-overlay" onclick="closeAdv(event)">
+  <div class="adv-sheet">
+    <div class="sheet-title">
+      ⚙️ 進階記帳
+      <button class="sheet-close" onclick="closeAdvDirect()">×</button>
+    </div>
+
+    <div class="section-label" style="margin-bottom:6px">寫入分頁</div>
+    <div class="adv-sheet-selector">
+      <button class="sheet-btn sel" id="sb-personal" onclick="advSetSheet('個人記帳',this)">個人記帳</button>
+      <button class="sheet-btn" id="sb-group" onclick="advSetSheet('團購記帳',this)">團購記帳</button>
+      <button class="sheet-btn" id="sb-sweet" onclick="advSetSheet('甜點記帳',this)">甜點記帳</button>
+    </div>
+
+    <div class="toggle2" style="margin-bottom:10px">
+      <button class="tbtn sel" id="adv-twd" onclick="advLedger('TWD')">🇹🇼 日常台幣</button>
+      <button class="tbtn" id="adv-krw" onclick="advLedger('KRW')">🇰🇷 批發韓幣</button>
+    </div>
+    <div class="toggle2">
+      <button class="tbtn exp" id="adv-exp" onclick="advType('支出')">支出</button>
+      <button class="tbtn" id="adv-inc" onclick="advType('收入')">收入</button>
+    </div>
+    <label>日期</label>
+    <input type="date" id="adv-date">
+    <div id="adv-sub-wrap"><label>類型</label><select id="adv-sub" onchange="advUpdCat()"></select></div>
+    <label>類別</label><select id="adv-cat" onchange="advUpdAcc()"></select>
+    <div id="adv-log-wrap" style="display:none">
+      <div class="special-box"><label>📦 物流</label>
+        <select id="adv-log"><option>賣貨便</option><option>店到店</option><option>郵局配送</option><option>新竹物流(小物)</option><option>新竹物流(大件)</option></select>
       </div>
     </div>
-    <div id="f-payuni-wrap" style="display:none">
+    <label>帳戶</label><select id="adv-acc"></select>
+    <div id="adv-es-wrap" style="display:none">
       <div class="special-box">
-        <label>📦 帳面總扣運費</label>
-        <input type="number" id="f-pship" placeholder="0">
+        <label>✨ 使用購物金</label><input type="number" id="adv-credit" placeholder="0">
+        <label style="margin-top:6px">📦 預付運費</label><input type="number" id="adv-ship" placeholder="0">
+      </div>
+    </div>
+    <div id="adv-pay-wrap" style="display:none">
+      <div class="special-box">
+        <label>📦 帳面總扣運費</label><input type="number" id="adv-pship" placeholder="0">
         <div style="font-size:11px;color:var(--text3);margin-top:4px">手續費依實收自動估算 2%</div>
       </div>
     </div>
-    <label id="f-amt-label">金額</label>
-    <input type="number" id="f-amount" inputmode="numeric" placeholder="0">
+    <label id="adv-amt-lbl">金額</label>
+    <input type="number" id="adv-amt" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:700;text-align:right;">
     <label>備註（選填）</label>
-    <input type="text" id="f-note" placeholder="寫點什麼…">
-    <div id="f-loading" style="display:none;text-align:center;font-size:13px;color:var(--text3);margin-bottom:8px">同步中…</div>
-    <button class="submit-btn" id="f-submit" onclick="submitLedger()">記錄一筆</button>
+    <input type="text" id="adv-note" placeholder="寫點什麼…">
+    <div class="sync-msg" id="adv-sync-msg"></div>
+    <button class="submit" id="adv-submit" onclick="submitAdv()">記錄一筆</button>
   </div>
-
-</div>
-
-<!-- ══ 代理頁 ══ -->
-<div class="page" id="page-agent">
-  <div class="card">
-    <div class="card-title">儲值金總覽（不可動）</div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name">一般儲值金</div></div>
-      <div class="list-item-amt warn" id="a-total-c">讀取中…</div>
-    </div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name">批發網儲值金</div></div>
-      <div class="list-item-amt warn" id="a-total-g">讀取中…</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">有餘額的代理</div>
-    <div id="agent-list"><div class="loading-msg">讀取中…</div></div>
-  </div>
-</div>
-
-<!-- ══ 固定支出頁 ══ -->
-<div class="page" id="page-fixed">
-  <div class="card">
-    <div class="card-title">每月固定支出</div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">還爸爸（第一筆）</div></div>
-      <div class="fixed-amt">$9,320</div>
-    </div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">還爸爸（第二筆）</div></div>
-      <div class="fixed-amt">$3,450</div>
-    </div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">健保費</div></div>
-      <div class="fixed-amt">$900</div>
-    </div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">水費</div></div>
-      <div class="fixed-amt">$300</div>
-    </div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">電費（夏季 6-9月）</div></div>
-      <div class="fixed-amt" id="elec-amt">計算中…</div>
-    </div>
-    <div class="divider"></div>
-    <div class="fixed-item">
-      <div><div class="fixed-name" style="font-weight:700">每月合計</div></div>
-      <div class="fixed-amt" id="fixed-total" style="color:var(--red);font-size:16px">計算中…</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">本月還款進度</div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">還爸爸合計</div><div style="font-size:11px;color:var(--text3)">每月 12,770 元</div></div>
-      <label style="display:flex;align-items:center;gap:8px;margin:0">
-        <input type="checkbox" id="chk-dad" style="width:20px;height:20px;margin:0"> <span style="font-size:13px;color:var(--text2)">已繳</span>
-      </label>
-    </div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">健保費</div></div>
-      <label style="display:flex;align-items:center;gap:8px;margin:0">
-        <input type="checkbox" id="chk-health" style="width:20px;height:20px;margin:0"> <span style="font-size:13px;color:var(--text2)">已繳</span>
-      </label>
-    </div>
-    <div class="fixed-item">
-      <div><div class="fixed-name">水電費</div></div>
-      <label style="display:flex;align-items:center;gap:8px;margin:0">
-        <input type="checkbox" id="chk-util" style="width:20px;height:20px;margin:0"> <span style="font-size:13px;color:var(--text2)">已繳</span>
-      </label>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">台新安全餘額</div>
-    <div class="alert info">台新需保留 <strong>20,000 + 代理儲值金</strong><br>低於此數字要立刻追款，不能動用代理的錢</div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name">備用金目標</div></div>
-      <div class="list-item-amt" style="color:var(--blue)">$20,000</div>
-    </div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name">代理儲值（不可動）</div></div>
-      <div class="list-item-amt warn" id="f-agent-total">讀取中…</div>
-    </div>
-    <div class="list-item">
-      <div class="list-item-left"><div class="list-item-name" style="font-weight:700">台新最低需保留</div></div>
-      <div class="list-item-amt warn" id="f-reserve">讀取中…</div>
-    </div>
-  </div>
-</div>
-
-<!-- 浮動快速記帳 -->
-<div id="fab">
-  <div id="quick-panel">
-    <div class="panel-title">
-      ⚡ 快速記帳
-      <button class="close-btn" onclick="closeQuick()">×</button>
-    </div>
-    <div class="type-toggle" style="margin-bottom:10px">
-      <button class="type-btn active-exp" id="q-btn-exp" onclick="qSetType('支出')">支出</button>
-      <button class="type-btn" id="q-btn-inc" onclick="qSetType('收入')">收入</button>
-    </div>
-    <label>金額</label>
-    <input type="number" id="q-amt" inputmode="numeric" placeholder="0" style="font-size:20px;font-weight:700;text-align:right">
-    <label>類別</label>
-    <select id="q-cat" onchange="qOnCatChange()"></select>
-    <div id="q-doudou" style="display:none">
-      <div class="special-box">
-        <label>🥜 DouDou 代理細項</label>
-        <select id="q-doudou-sub">
-          <option>批發網下單（台幣）</option>
-          <option>國際運費</option>
-          <option>國內運費</option>
-          <option>整理費</option>
-          <option>代理儲值入帳</option>
-        </select>
-      </div>
-    </div>
-    <label>帳戶</label>
-    <select id="q-account">
-      <option value="銀行轉帳 (中國信託)">中信（現金卡）</option>
-      <option value="銀行轉帳 (台新銀行)">台新銀行</option>
-      <option value="Line Pay">LINE Pay</option>
-      <option value="iPass Money">iPASS Money</option>
-      <option value="現金">現金</option>
-      <option value="信用卡">信用卡</option>
-    </select>
-    <label>備註（選填）</label>
-    <input type="text" id="q-note" placeholder="寫點什麼…">
-    <div id="qmsg"></div>
-    <button class="submit-btn" onclick="qSubmit()">⚡ 記一筆</button>
-  </div>
-  <button id="fab-btn" onclick="toggleQuick()">✏️</button>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwuxOVzHkUwiJFWBWEdcsWkJw5YreG-F5_ZrBajnmmZiNMFOf6JvfNdeDaF-I_jVG-h/exec";
-const CACHE_KEY = 'ni_dash_v2';
-const CACHE_TTL = 30000;
+const API="https://script.google.com/macros/s/AKfycbwuxOVzHkUwiJFWBWEdcsWkJw5YreG-F5_ZrBajnmmZiNMFOf6JvfNdeDaF-I_jVG-h/exec";
+const CK='ni_v5',TTL=30000;
+let dash={},agent={totalC:0,totalG:0};
+let curMode='',curAmt='',selSub=0,selAcc='',foodType='收入';
+let advLed='TWD',advTyp='支出',advSheet='個人記帳';
 
-let dashData = {};
-let agentData = { totalC: 0, totalG: 0, agents: [] };
-let currentLedger = 'TWD';
-let currentType = '支出';
-let qType = '支出';
-let fabOpen = false;
-
-// ── 日期 ──
-function initDate() {
-  const now = new Date();
-  document.getElementById('top-date').textContent =
-    now.getFullYear() + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0');
-  document.getElementById('f-date').valueAsDate = now;
-  const m = now.getMonth() + 1;
-  const isSummer = m >= 6 && m <= 9;
-  document.getElementById('elec-amt').textContent = isSummer ? '$10,000' : '$5,000';
-  const elec = isSummer ? 10000 : 5000;
-  document.getElementById('fixed-total').textContent = '$' + (9320+3450+900+300+elec).toLocaleString();
-}
-
-// ── 頁籤切換 ──
-function switchPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  const idx = ['home','ledger','agent','fixed'].indexOf(name);
-  document.querySelectorAll('.tab')[idx].classList.add('active');
-}
-
-// ── 快取 ──
-function getCache(key) {
-  try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now()-c.ts < CACHE_TTL) return c.data; } catch(e) {}
-  return null;
-}
-function setCache(key, data) {
-  try { sessionStorage.setItem(key, JSON.stringify({data, ts: Date.now()})); } catch(e) {}
-}
-function clearCache() {
-  try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
-}
-
-// ── 載入儀表板 ──
-async function loadDashboard(force) {
-  if (!force) {
-    const c = getCache(CACHE_KEY);
-    if (c) { renderDash(c.dash); renderAgents(c.agent); return; }
-  }
-  try {
-    const [dRes, aRes] = await Promise.all([
-      fetch(API + '?action=getDashboard'),
-      fetch(API + '?action=getAgentBalance')
-    ]);
-    const dash = await dRes.json();
-    const agent = await aRes.json();
-    setCache(CACHE_KEY, {dash, agent});
-    renderDash(dash);
-    renderAgents(agent);
-  } catch(e) {
-    document.getElementById('h-netcash').textContent = '連線失敗';
-  }
-}
-
-function fmt(n) { return '$' + Math.round(Math.abs(n)).toLocaleString(); }
-
-function renderDash(d) {
-  dashData = d;
-  const net = parseInt(String(d.netCash).replace(/[^0-9-]/g,'')) || 0;
-  const el = document.getElementById('h-netcash');
-  el.textContent = fmt(net);
-  el.className = 'big-num ' + (net > 20000 ? 'ok' : net > 5000 ? 'warn' : 'danger');
-  document.getElementById('h-asset').textContent = '$' + d.totalAsset;
-  document.getElementById('h-debt').textContent = '$' + d.debt;
-  document.getElementById('h-income').textContent = fmt(d.monthIncome);
-  document.getElementById('h-expense').textContent = fmt(d.monthExpense);
-
-  const accList = document.getElementById('account-list');
-  accList.innerHTML = Object.entries(d.accounts).map(([k,v]) =>
-    `<div class="account-row">
-      <div class="account-name">${k}</div>
-      <div class="account-val ${k==='批發網點數'?'protected':''}">${k==='批發網點數'?'🔒 ':''}$${Math.round(v).toLocaleString()}</div>
-    </div>`
-  ).join('');
-
-  renderAlerts(net, d);
-}
-
-function renderAgents(a) {
-  agentData = a;
-  const totalAgent = Math.round(a.totalC + a.totalG);
-  const reserve = 20000 + totalAgent;
-
-  document.getElementById('h-agent-c').textContent = fmt(a.totalC);
-  document.getElementById('h-agent-g').textContent = fmt(a.totalG);
-  document.getElementById('h-reserve').textContent = fmt(reserve);
-  document.getElementById('a-total-c').textContent = fmt(a.totalC);
-  document.getElementById('a-total-g').textContent = fmt(a.totalG);
-  document.getElementById('f-agent-total').textContent = fmt(totalAgent);
-  document.getElementById('f-reserve').textContent = fmt(reserve);
-
-  const agentList = document.getElementById('agent-list');
-  if (!a.agents || a.agents.length === 0) {
-    agentList.innerHTML = '<div class="loading-msg">目前所有代理餘額為零</div>';
-    return;
-  }
-  agentList.innerHTML = a.agents.map(ag => `
-    <div class="list-item">
-      <div class="list-item-left">
-        <div class="list-item-name">${ag.name || ag.code}
-          <span class="badge ${ag.status}">${ag.status === 'active' ? '啟用' : '停用'}</span>
-        </div>
-        <div class="list-item-sub">${ag.code}</div>
-      </div>
-      <div class="list-item-right">
-        ${ag.balC !== 0 ? `<div class="list-item-amt warn" style="font-size:13px">一般 ${fmt(ag.balC)}</div>` : ''}
-        ${ag.balG !== 0 ? `<div class="list-item-amt warn" style="font-size:13px">批發 ${fmt(ag.balG)}</div>` : ''}
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderAlerts(net, d) {
-  const area = document.getElementById('alerts-area');
-  const reserve = 20000 + Math.round(agentData.totalC + agentData.totalG);
-  let html = '';
-  if (net < reserve) {
-    html += `<div class="alert danger">🚨 台新餘額不足！需保留 ${fmt(reserve)}，目前低於安全水位</div>`;
-  } else if (net < reserve + 5000) {
-    html += `<div class="alert warn">⚠️ 台新餘額偏低，距安全水位僅剩 ${fmt(net - reserve)}</div>`;
-  } else {
-    html += `<div class="alert ok">✅ 帳戶安全，淨現金正常</div>`;
-  }
-  const now = new Date();
-  if (now.getDate() <= 5) {
-    html += `<div class="alert info">📅 本月固定：還爸爸 $12,770 ＋ 健保 $900 ＋ 水電費</div>`;
-  }
-  area.innerHTML = html;
-}
-
-// ── 校正 ──
-function calcDiff() {
-  const acc = document.getElementById('qAcc').value;
-  const actual = parseFloat(document.getElementById('qAmt').value) || 0;
-  const system = dashData.accounts ? (dashData.accounts[acc] || 0) : 0;
-  const diff = actual - system;
-  const msg = document.getElementById('diff-msg');
-  if (!document.getElementById('qAmt').value) { msg.textContent = ''; return; }
-  if (diff === 0) msg.innerHTML = '✅ 帳目正確！';
-  else msg.innerHTML = `差額：<span style="color:${diff>0?'var(--blue)':'var(--red)'};font-weight:700">${diff>0?'+':''}${Math.round(diff)}</span>`;
-}
-
-async function updateBalance() {
-  const acc = document.getElementById('qAcc').value;
-  const amt = document.getElementById('qAmt').value;
-  if (!amt) return;
-  try {
-    await fetch(`${API}?action=updateBalance&accountName=${encodeURIComponent(acc)}&amount=${amt}`);
-    document.getElementById('diff-msg').textContent = '✅ 已校正！';
-    document.getElementById('qAmt').value = '';
-    clearCache();
-    loadDashboard(true);
-  } catch(e) { alert('更新失敗'); }
-}
-
-// ── 記帳表單 ──
-const catMap = {
-  '支出': {
-    '變動支出': ['娛樂費','交通費','線上購物','實體購物','早餐/午餐/晚餐','點心/宵夜/飲料'],
-    '固定支出': ['房租','瓦斯費','電信費','燃料費','債務還款','APP訂閱','水費/電費','保險(小孩)','保險(大人)','汽機車牌照稅'],
-    '小孩支出': ['尿布','健康','娛樂','學雜費'],
-    '甜點支出': ['運費','手續費','包材進貨','材料進貨'],
-    '選品支出 (零售)': ['手續費','選品進貨','藍新沖銷','國際運費','國內運費','斷貨退款','活動購物金'],
-    '代理支出 (批發)': ['成本','代墊款','斷貨退款','國際運費','國內運費','批發儲值(台幣)']
+// 快速記帳模式定義
+// targetSheet: 寫入哪個分頁
+const MODES={
+  buy:{
+    title:'🛍️ 買東西',targetSheet:'個人記帳',
+    cats:[
+      {label:'餐飲',type:'支出',sub:'變動支出',cat:'早餐/午餐/晚餐'},
+      {label:'點心飲料',type:'支出',sub:'變動支出',cat:'點心/宵夜/飲料'},
+      {label:'娛樂',type:'支出',sub:'變動支出',cat:'娛樂費'},
+      {label:'線上購物',type:'支出',sub:'變動支出',cat:'線上購物'},
+      {label:'實體購物',type:'支出',sub:'變動支出',cat:'實體購物'},
+      {label:'交通',type:'支出',sub:'變動支出',cat:'交通費'},
+      {label:'小孩用品',type:'支出',sub:'小孩支出',cat:'尿布'},
+      {label:'小孩娛樂',type:'支出',sub:'小孩支出',cat:'娛樂'},
+      {label:'小孩健康',type:'支出',sub:'小孩支出',cat:'健康'},
+      {label:'訂閱費',type:'支出',sub:'固定支出',cat:'APP訂閱'},
+      {label:'水電費',type:'支出',sub:'固定支出',cat:'水費/電費'},
+      {label:'保險',type:'支出',sub:'固定支出',cat:'保險(大人)'},
+    ],
+    accs:['現金','信用卡','Line Pay','iPass Money','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)']
   },
-  '收入': {
-    '個人收入': ['一般','沐光毓師資','沐光毓小幫手'],
-    '甜點收入': ['實體門市','私訊訂購','表單訂購','PAYUNi 入帳'],
-    '選品收入 (零售)': ['現貨出清','記事本收款','EasyStore 訂單'],
-    '代理收入 (批發)': ['倉庫整理費','代墊款回收','國際運費收回','國內運費收回']
+  receive:{
+    title:'💰 收款',targetSheet:'團購記帳',
+    cats:[
+      {label:'EasyStore訂單',type:'收入',sub:'選品收入 (零售)',cat:'EasyStore 訂單'},
+      {label:'現貨出清',type:'收入',sub:'選品收入 (零售)',cat:'現貨出清'},
+      {label:'記事本收款',type:'收入',sub:'選品收入 (零售)',cat:'記事本收款'},
+      {label:'代墊款回收',type:'收入',sub:'代理收入 (批發)',cat:'代墊款回收'},
+      {label:'國際運費收回',type:'收入',sub:'代理收入 (批發)',cat:'國際運費收回'},
+      {label:'國內運費收回',type:'收入',sub:'代理收入 (批發)',cat:'國內運費收回'},
+      {label:'倉庫整理費',type:'收入',sub:'代理收入 (批發)',cat:'倉庫整理費'},
+    ],
+    accs:['銀行轉帳 (台新銀行)','Line Pay','銀行轉帳 (中國信託)','iPass Money','現金']
+  },
+  pay:{
+    title:'📦 付廠商',targetSheet:'團購記帳',
+    cats:[
+      {label:'廠商貨款',type:'支出',sub:'代理支出 (批發)',cat:'代墊款'},
+      {label:'選品進貨',type:'支出',sub:'選品支出 (零售)',cat:'選品進貨'},
+      {label:'國際運費',type:'支出',sub:'代理支出 (批發)',cat:'國際運費'},
+      {label:'國內運費',type:'支出',sub:'代理支出 (批發)',cat:'國內運費'},
+      {label:'手續費',type:'支出',sub:'選品支出 (零售)',cat:'手續費'},
+    ],
+    accs:['銀行轉帳 (台新銀行)','Line Pay','銀行轉帳 (中國信託)','現金']
+  },
+  food:{
+    title:'🍳 食育課',targetSheet:'個人記帳', // 收入→個人，支出→甜點（動態切換）
+    cats:[], // 動態產生
+    accs:['現金','銀行轉帳 (台新銀行)','Line Pay','銀行轉帳 (中國信託)']
   }
 };
 
-function setLedger(l) {
-  currentLedger = l;
-  document.getElementById('led-twd').className = 'ledger-btn' + (l==='TWD'?' active':'');
-  document.getElementById('led-krw').className = 'ledger-btn' + (l==='KRW'?' active':'');
-  setType('支出');
+const FOOD_CATS={
+  '收入':[{label:'師資費',type:'收入',sub:'個人收入',cat:'沐光毓師資'}],
+  '支出':[
+    {label:'材料進貨',type:'支出',sub:'甜點支出',cat:'材料進貨'},
+    {label:'包材',type:'支出',sub:'甜點支出',cat:'包材進貨'},
+    {label:'運費',type:'支出',sub:'甜點支出',cat:'運費'},
+  ]
+};
+
+function fmt(n){return '$'+Math.round(Math.abs(n)).toLocaleString();}
+function fmtN(n){return (n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString();}
+
+function initDate(){
+  const now=new Date();
+  document.getElementById('top-date').textContent=now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0');
+  document.getElementById('adv-date').valueAsDate=now;
 }
 
-function setType(t) {
-  currentType = t;
-  document.getElementById('btn-exp').className = 'type-btn' + (t==='支出'?' active-exp':'');
-  document.getElementById('btn-inc').className = 'type-btn' + (t==='收入'?' active-inc':'');
-  if (currentLedger === 'TWD') {
-    document.getElementById('f-subtype-wrap').style.display = 'block';
-    const subs = Object.keys(catMap[t]);
-    document.getElementById('f-subtype').innerHTML = subs.map(s=>`<option>${s}</option>`).join('');
-    updateCats();
-  } else {
-    document.getElementById('f-subtype-wrap').style.display = 'none';
-    document.getElementById('f-cat').innerHTML = t==='支出'?'<option>代理下單</option>':'<option>儲值</option>';
-    document.getElementById('f-account').innerHTML = '<option value="批發網點數">批發網點數</option>';
-  }
+function gc(k){try{const c=JSON.parse(sessionStorage.getItem(k));if(c&&Date.now()-c.ts<TTL)return c.d;}catch(e){}return null;}
+function sc(k,d){try{sessionStorage.setItem(k,JSON.stringify({d,ts:Date.now()}));}catch(e){}}
+function cc(){try{sessionStorage.removeItem(CK);}catch(e){}}
+
+async function loadData(force){
+  if(!force){const c=gc(CK);if(c){renderDash(c.d);renderAgent(c.a);return;}}
+  try{
+    const[dr,ar]=await Promise.all([
+      fetch(API+'?action=getDashboard'),
+      fetch(API+'?action=getAgentBalance')
+    ]);
+    const d=await dr.json(),a=await ar.json();
+    sc(CK,{d,a});renderDash(d);renderAgent(a);
+  }catch(e){document.getElementById('s-net').textContent='連線失敗';}
 }
 
-function updateCats() {
-  if (currentLedger === 'KRW') return;
-  const sub = document.getElementById('f-subtype').value;
-  const cats = catMap[currentType][sub] || [];
-  document.getElementById('f-cat').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
-  updateAccounts();
+const ACC_MAP={
+  '台新銀行':'a-taishin','中國信託':'a-ctbc','國泰世華':'a-cathay',
+  'LINE Bank':'a-linebank','LINE Pay Money':'a-linepay','iPASS Money':'a-ipass',
+  '其他/現金':'a-cash','批發網點數':'a-krw','信貸/信用卡':'a-loan'
+};
+
+function renderDash(d){
+  dash=d;
+  const net=parseInt(String(d.netCash).replace(/[^0-9-]/g,''))||0;
+  const el=document.getElementById('s-net');
+  el.textContent=fmtN(net);
+  el.className='status-num '+(net>20000?'ok':net>5000?'warn':'danger');
+  document.getElementById('s-income').textContent=fmt(d.monthIncome);
+  document.getElementById('s-expense').textContent=fmt(d.monthExpense);
+  document.getElementById('s-debt').textContent=fmt(parseInt(String(d.debt).replace(/[^0-9]/g,''))||0);
+  if(d.krwRate)document.getElementById('krw-input').value=d.krwRate;
+  const accs=d.accounts||{};
+  Object.entries(ACC_MAP).forEach(([name,id])=>{
+    const el=document.getElementById(id);if(!el)return;
+    const val=accs[name];
+    el.textContent=val!==undefined?(val<0?'-$':'$')+Math.round(Math.abs(val)).toLocaleString():'--';
+  });
+  renderAlerts(net);
 }
 
-function updateAccounts() {
-  if (currentLedger === 'KRW') return;
-  const cat = document.getElementById('f-cat').value;
-  const isES = cat === 'EasyStore 訂單';
-  const isPay = cat === 'PAYUNi 入帳';
-  let list = ['現金','信用卡','Line Pay','iPass Money','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
-  if (isPay) list = ['銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
-  else if (isES) list = ['Line Pay','藍新待撥款','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
-  else if (cat==='記事本收款') list = ['Line Pay','iPass Money','銀行轉帳 (台新銀行)'];
-  else if (cat==='藍新沖銷') list = ['銀行轉帳 (中國信託)'];
-  else if (cat==='活動購物金') list = ['ES購物金'];
-  if (currentType==='收入' || (document.getElementById('f-subtype').value||'').includes('代理')) list = list.filter(i=>i!=='信用卡');
-  document.getElementById('f-account').innerHTML = list.map(a=>`<option value="${a}">${a}</option>`).join('');
-  document.getElementById('f-es-wrap').style.display = isES ? 'block' : 'none';
-  document.getElementById('f-payuni-wrap').style.display = isPay ? 'block' : 'none';
-  document.getElementById('f-logistics-wrap').style.display = (currentType==='支出' && (cat==='國內運費'||cat==='運費')) ? 'block' : 'none';
-  document.getElementById('f-amt-label').textContent = isPay ? '銀行實收金額' : isES ? '商品原價' : '金額';
+function renderAgent(a){
+  agent=a;
+  const total=Math.round(a.totalC+a.totalG),rsv=20000+total;
+  document.getElementById('ag-c').textContent=fmt(a.totalC);
+  document.getElementById('ag-g').textContent=fmt(a.totalG);
+  document.getElementById('ag-rsv').textContent=fmt(rsv);
+  const cathay=dash.accounts&&dash.accounts['國泰世華']?dash.accounts['國泰世華']:0;
+  document.getElementById('ag-cathay').textContent=(cathay<0?'-$':'$')+Math.round(Math.abs(cathay)).toLocaleString();
 }
 
-async function submitLedger() {
-  const mainAmt = parseInt(document.getElementById('f-amount').value) || 0;
-  if (!mainAmt) { alert('請輸入金額'); return; }
-  const cat = document.getElementById('f-cat').value;
-  const isES = cat === 'EasyStore 訂單';
-  const isPay = cat === 'PAYUNi 入帳';
-  const sub = currentLedger==='KRW' ? '批發網(韓幣)' : document.getElementById('f-subtype').value;
-  const acc = document.getElementById('f-account').value;
-  const date = document.getElementById('f-date').value;
-  const note = document.getElementById('f-note').value;
-  const btn = document.getElementById('f-submit');
-  btn.disabled = true;
-  document.getElementById('f-loading').style.display = 'block';
+function renderAlerts(net){
+  const rsv=20000+Math.round((agent.totalC||0)+(agent.totalG||0));
+  let html='';
+  if(net<rsv)html+=`<div class="alert danger">🚨 台新餘額不足！需保留 ${fmt(rsv)}</div>`;
+  else if(net<rsv+5000)html+=`<div class="alert warn">⚠️ 台新餘額偏低，距安全水位僅剩 ${fmt(net-rsv)}</div>`;
+  else html+=`<div class="alert ok">✅ 帳戶安全</div>`;
+  if(new Date().getDate()<=5)html+=`<div class="alert info">📅 月初：還爸爸 $12,770 ＋ 健保 $900 ＋ 水電費 ＋ 訂閱費</div>`;
+  document.getElementById('alert-area').innerHTML=html;
+}
 
-  const send = (d,t,st,c,a,am,n) =>
-    fetch(`${API}?action=add&date=${d}&type=${encodeURIComponent(t)}&subType=${encodeURIComponent(st)}&category=${encodeURIComponent(c)}&account=${encodeURIComponent(a)}&amount=${am}&note=${encodeURIComponent(n)}`);
-
-  try {
-    if (isPay) {
-      const pShip = parseInt(document.getElementById('f-pship').value) || 0;
-      const fee = Math.round(mainAmt * 0.02);
-      const total = mainAmt + pShip + fee;
-      await send(date,'收入',sub,cat,acc,total,`[PAYUNi撥款:實收${mainAmt}/扣運${pShip}/手續${fee}] ${note}`);
-      if (pShip > 0) await send(date,'支出','甜點支出','運費',acc,pShip,`(PAYUNi扣運)${note}`);
-      await send(date,'支出','甜點支出','手續費',acc,fee,`(PAYUNi手續)${note}`);
-    } else if (isES) {
-      const credit = parseInt(document.getElementById('f-credit').value) || 0;
-      const ship = parseInt(document.getElementById('f-ship').value) || 0;
-      const paid = mainAmt + ship - credit;
-      await send(date,'收入',sub,cat,acc,paid,`[商${mainAmt}/運${ship}${credit?'/折'+credit:''}] ${note}`);
-      if (credit > 0) await send(date,'收入',sub,cat,'ES購物金',credit,`(點數)${note}`);
-    } else {
-      let finalNote = note;
-      if (document.getElementById('f-logistics-wrap').style.display !== 'none') {
-        finalNote = `[${document.getElementById('f-logistics').value}] ${note}`;
-      }
-      await send(date,currentType,sub,cat,acc,mainAmt,finalNote);
-    }
-    document.getElementById('f-amount').value = '';
-    document.getElementById('f-note').value = '';
-    clearCache();
-    loadDashboard(true);
-    alert('✅ 記帳完成！');
-  } catch(e) {
-    alert('❌ 失敗，請重試');
-  } finally {
-    btn.disabled = false;
-    document.getElementById('f-loading').style.display = 'none';
-  }
+async function saveRate(){
+  const r=document.getElementById('krw-input').value;
+  if(!r)return;
+  try{await fetch(`${API}?action=updateRate&rate=${r}`);cc();loadData(true);}
+  catch(e){alert('更新失敗');}
 }
 
 // ── 快速記帳 ──
-const qCatMap = {
-  '支出': ['娛樂費','交通費','線上購物','實體購物','餐飲','點心/飲料','房租','電信費','水電費','燃料費','APP訂閱','保險','債務還款','小孩支出','甜點支出','🥜 DouDou代理支出'],
-  '收入': ['個人收入','甜點收入','選品收入','代理收入','其他收入']
-};
-const qSubMap = {
-  '娛樂費':'變動支出','交通費':'變動支出','線上購物':'變動支出','實體購物':'變動支出',
-  '餐飲':'變動支出','點心/飲料':'變動支出','房租':'固定支出','電信費':'固定支出',
-  '水電費':'固定支出','燃料費':'固定支出','APP訂閱':'固定支出','保險':'固定支出',
-  '債務還款':'固定支出','小孩支出':'小孩支出','甜點支出':'甜點支出','DouDou代理支出':'代理支出 (批發)'
-};
+function openSheet(mode){
+  curMode=mode;curAmt='';selSub=0;selAcc='';foodType='收入';
+  const m=MODES[mode];
+  document.getElementById('sheet-title-text').textContent=m.title;
+  document.getElementById('amt-display').textContent='0';
+  document.getElementById('amt-display').className='amt-display';
+  document.getElementById('sheet-note').value='';
+  document.getElementById('sync-msg').textContent='';
 
-function qSetType(t) {
-  qType = t;
-  document.getElementById('q-btn-exp').className = 'type-btn' + (t==='支出'?' active-exp':'');
-  document.getElementById('q-btn-inc').className = 'type-btn' + (t==='收入'?' active-inc':'');
-  document.getElementById('q-cat').innerHTML = qCatMap[t].map(c=>`<option>${c}</option>`).join('');
-  qOnCatChange();
-}
-function qOnCatChange() {
-  document.getElementById('q-doudou').style.display =
-    document.getElementById('q-cat').value.includes('DouDou') ? 'block' : 'none';
-}
-function toggleQuick() {
-  fabOpen = !fabOpen;
-  document.getElementById('quick-panel').style.display = fabOpen ? 'block' : 'none';
-  document.getElementById('fab-btn').textContent = fabOpen ? '×' : '✏️';
-  if (fabOpen) setTimeout(()=>document.getElementById('q-amt').focus(), 100);
-}
-function closeQuick() { fabOpen = false; document.getElementById('quick-panel').style.display = 'none'; document.getElementById('fab-btn').textContent = '✏️'; }
+  // 食育課特殊處理
+  const isFoodMode=mode==='food';
+  document.getElementById('food-toggle').style.display=isFoodMode?'block':'none';
+  if(isFoodMode)foodSetType('收入',false);
+  else renderSheetCats(m.cats,m.accs);
 
-async function qSubmit() {
-  const amt = parseInt(document.getElementById('q-amt').value) || 0;
-  if (!amt) { document.getElementById('qmsg').textContent = '⚠️ 請輸入金額'; return; }
-  const cat = document.getElementById('q-cat').value;
-  const acc = document.getElementById('q-account').value;
-  const note = document.getElementById('q-note').value;
-  const msg = document.getElementById('qmsg');
-  let finalCat = cat, finalNote = note;
-  if (cat.includes('DouDou')) {
-    const sub = document.getElementById('q-doudou-sub').value;
-    finalCat = 'DouDou代理支出';
-    finalNote = `[DouDou-${sub}] ${note}`.trim();
+  document.getElementById('sheet-overlay').classList.add('show');
+}
+
+function foodSetType(t,render=true){
+  foodType=t;
+  document.getElementById('food-inc').className='type-btn'+(t==='收入'?' inc':'');
+  document.getElementById('food-exp').className='type-btn'+(t==='支出'?' exp':'');
+  if(render)renderSheetCats(FOOD_CATS[t],MODES.food.accs);
+  else renderSheetCats(FOOD_CATS[t],MODES.food.accs);
+}
+
+function renderSheetCats(cats,accs){
+  selSub=0;
+  document.getElementById('sub-cats').innerHTML=cats.map((c,i)=>
+    `<button class="sub-cat ${i===0?'selected':''}" onclick="pickSub(${i},this)">${c.label}</button>`
+  ).join('');
+  selAcc=accs[0];
+  document.getElementById('acc-opts').innerHTML=accs.map((a,i)=>
+    `<button class="acc-opt ${i===0?'selected':''}" onclick="pickAcc('${a}',this)">${a.replace('銀行轉帳 (','').replace(')','')}</button>`
+  ).join('');
+}
+
+function pickSub(i,el){
+  selSub=i;
+  document.querySelectorAll('.sub-cat').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function pickAcc(acc,el){
+  selAcc=acc;
+  document.querySelectorAll('.acc-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function numPress(n){if(curAmt.length>=8)return;curAmt+=n;updateAmtDisplay();}
+function numDel(){curAmt=curAmt.slice(0,-1);updateAmtDisplay();}
+function updateAmtDisplay(){
+  const el=document.getElementById('amt-display');
+  el.textContent=curAmt?parseInt(curAmt).toLocaleString():'0';
+  el.className='amt-display'+(curAmt?' has-val':'');
+}
+
+async function submitSheet(){
+  const amt=parseInt(curAmt)||0;
+  const msg=document.getElementById('sync-msg');
+  if(!amt){msg.style.color='var(--red)';msg.textContent='⚠️ 請輸入金額';return;}
+
+  const m=MODES[curMode];
+  let cats=curMode==='food'?FOOD_CATS[foodType]:m.cats;
+  const catObj=cats[selSub];
+  const note=document.getElementById('sheet-note').value;
+  const today=new Date().toISOString().slice(0,10);
+
+  // 決定寫入哪個分頁
+  let targetSheet=m.targetSheet;
+  if(curMode==='food' && foodType==='支出') targetSheet='甜點記帳';
+  if(curMode==='food' && foodType==='收入') targetSheet='個人記帳';
+
+  const btn=document.getElementById('sheet-submit');
+  btn.disabled=true;
+  msg.style.color='var(--text3)';msg.textContent='同步中…';
+
+  try{
+    await fetch(`${API}?action=add&targetSheet=${encodeURIComponent(targetSheet)}&date=${today}&type=${encodeURIComponent(catObj.type)}&subType=${encodeURIComponent(catObj.sub)}&category=${encodeURIComponent(catObj.cat)}&account=${encodeURIComponent(selAcc)}&amount=${amt}&note=${encodeURIComponent(note)}`);
+    msg.style.color='var(--green-text)';msg.textContent='✅ 已記到「'+targetSheet+'」！';
+    curAmt='';updateAmtDisplay();
+    document.getElementById('sheet-note').value='';
+    cc();loadData(true);
+    setTimeout(()=>{msg.textContent='';},2500);
+  }catch(e){
+    msg.style.color='var(--red)';msg.textContent='❌ 失敗，請重試';
   }
-  const subType = qSubMap[finalCat] || '變動支出';
-  const today = new Date().toISOString().slice(0,10);
-  msg.style.color = 'var(--text3)'; msg.textContent = '同步中…';
-  try {
-    await fetch(`${API}?action=add&date=${today}&type=${encodeURIComponent(qType)}&subType=${encodeURIComponent(subType)}&category=${encodeURIComponent(finalCat)}&account=${encodeURIComponent(acc)}&amount=${amt}&note=${encodeURIComponent(finalNote)}`);
-    msg.style.color = 'var(--green)'; msg.textContent = '✅ 記帳完成！';
-    document.getElementById('q-amt').value = '';
-    document.getElementById('q-note').value = '';
-    clearCache();
-    loadDashboard(true);
-    setTimeout(()=>{ msg.textContent=''; }, 2000);
-  } catch(e) {
-    msg.style.color = 'var(--red)'; msg.textContent = '❌ 失敗，請重試';
-  }
+  btn.disabled=false;
 }
 
-// ── 初始化 ──
-initDate();
-setType('支出');
-qSetType('支出');
-loadDashboard(false);
+function closeSheet(e){if(e.target===document.getElementById('sheet-overlay'))closeSheetDirect();}
+function closeSheetDirect(){document.getElementById('sheet-overlay').classList.remove('show');}
+
+// ── 進階記帳 ──
+const CAT={
+  '支出':{
+    '變動支出':['娛樂費','交通費','線上購物','實體購物','早餐/午餐/晚餐','點心/宵夜/飲料'],
+    '固定支出':['房租','瓦斯費','電信費','燃料費','債務還款','APP訂閱','水費/電費','保險(小孩)','保險(大人)','汽機車牌照稅'],
+    '小孩支出':['尿布','健康','娛樂','學雜費'],
+    '甜點支出':['運費','手續費','包材進貨','材料進貨'],
+    '選品支出 (零售)':['手續費','選品進貨','藍新沖銷','國際運費','國內運費','斷貨退款','活動購物金'],
+    '代理支出 (批發)':['成本','代墊款','斷貨退款','國際運費','國內運費','批發儲值(台幣)']
+  },
+  '收入':{
+    '個人收入':['一般','沐光毓師資','沐光毓小幫手'],
+    '甜點收入':['實體門市','私訊訂購','表單訂購','PAYUNi 入帳'],
+    '選品收入 (零售)':['現貨出清','記事本收款','EasyStore 訂單'],
+    '代理收入 (批發)':['倉庫整理費','代墊款回收','國際運費收回','國內運費收回']
+  }
+};
+
+function openAdv(){
+  document.getElementById('adv-overlay').classList.add('show');
+  advLed='TWD';advTyp='支出';advSheet='個人記帳';
+  document.getElementById('adv-twd').className='tbtn sel';
+  document.getElementById('adv-krw').className='tbtn';
+  document.querySelectorAll('.sheet-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('sb-personal').classList.add('sel');
+  advType('支出');
+}
+function advSetSheet(name,el){
+  advSheet=name;
+  document.querySelectorAll('.sheet-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function closeAdv(e){if(e.target===document.getElementById('adv-overlay'))closeAdvDirect();}
+function closeAdvDirect(){document.getElementById('adv-overlay').classList.remove('show');}
+
+function advLedger(l){
+  advLed=l;
+  document.getElementById('adv-twd').className='tbtn'+(l==='TWD'?' sel':'');
+  document.getElementById('adv-krw').className='tbtn'+(l==='KRW'?' sel':'');
+  advType(advTyp);
+}
+function advType(t){
+  advTyp=t;
+  document.getElementById('adv-exp').className='tbtn'+(t==='支出'?' exp':'');
+  document.getElementById('adv-inc').className='tbtn'+(t==='收入'?' inc':'');
+  if(advLed==='TWD'){
+    document.getElementById('adv-sub-wrap').style.display='block';
+    document.getElementById('adv-sub').innerHTML=Object.keys(CAT[t]).map(s=>`<option>${s}</option>`).join('');
+    advUpdCat();
+  }else{
+    document.getElementById('adv-sub-wrap').style.display='none';
+    document.getElementById('adv-cat').innerHTML=t==='支出'?'<option>代理下單</option>':'<option>儲值</option>';
+    document.getElementById('adv-acc').innerHTML='<option value="批發網點數">批發網點數</option>';
+  }
+}
+function advUpdCat(){
+  if(advLed==='KRW')return;
+  const sub=document.getElementById('adv-sub').value;
+  document.getElementById('adv-cat').innerHTML=(CAT[advTyp][sub]||[]).map(c=>`<option>${c}</option>`).join('');
+  advUpdAcc();
+}
+function advUpdAcc(){
+  if(advLed==='KRW')return;
+  const cat=document.getElementById('adv-cat').value;
+  const isES=cat==='EasyStore 訂單',isPay=cat==='PAYUNi 入帳';
+  let list=['現金','信用卡','Line Pay','iPass Money','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
+  if(isPay)list=['銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
+  else if(isES)list=['Line Pay','藍新待撥款','銀行轉帳 (中國信託)','銀行轉帳 (台新銀行)'];
+  else if(cat==='記事本收款')list=['Line Pay','iPass Money','銀行轉帳 (台新銀行)'];
+  else if(cat==='藍新沖銷')list=['銀行轉帳 (中國信託)'];
+  else if(cat==='活動購物金')list=['ES購物金'];
+  if(advTyp==='收入'||(document.getElementById('adv-sub').value||'').includes('代理'))list=list.filter(i=>i!=='信用卡');
+  document.getElementById('adv-acc').innerHTML=list.map(a=>`<option value="${a}">${a}</option>`).join('');
+  document.getElementById('adv-es-wrap').style.display=isES?'block':'none';
+  document.getElementById('adv-pay-wrap').style.display=isPay?'block':'none';
+  document.getElementById('adv-log-wrap').style.display=(advTyp==='支出'&&(cat==='國內運費'||cat==='運費'))?'block':'none';
+  document.getElementById('adv-amt-lbl').textContent=isPay?'銀行實收金額':isES?'商品原價':'金額';
+}
+
+const send=(ts,d,t,st,c,a,am,n)=>fetch(`${API}?action=add&targetSheet=${encodeURIComponent(ts)}&date=${d}&type=${encodeURIComponent(t)}&subType=${encodeURIComponent(st)}&category=${encodeURIComponent(c)}&account=${encodeURIComponent(a)}&amount=${am}&note=${encodeURIComponent(n)}`);
+
+async function submitAdv(){
+  const amt=parseInt(document.getElementById('adv-amt').value)||0;
+  if(!amt){alert('請輸入金額');return;}
+  const cat=document.getElementById('adv-cat').value;
+  const isES=cat==='EasyStore 訂單',isPay=cat==='PAYUNi 入帳';
+  const sub=advLed==='KRW'?'批發網(韓幣)':document.getElementById('adv-sub').value;
+  const acc=document.getElementById('adv-acc').value;
+  const date=document.getElementById('adv-date').value;
+  const note=document.getElementById('adv-note').value;
+  const msg=document.getElementById('adv-sync-msg');
+  const btn=document.getElementById('adv-submit');
+  btn.disabled=true;msg.style.color='var(--text3)';msg.textContent='同步中…';
+  try{
+    if(isPay){
+      const ps=parseInt(document.getElementById('adv-pship').value)||0,fee=Math.round(amt*0.02);
+      await send(advSheet,date,'收入',sub,cat,acc,amt+ps+fee,`[PAYUNi:實收${amt}/運${ps}/手續${fee}] ${note}`);
+      if(ps>0)await send(advSheet,date,'支出','甜點支出','運費',acc,ps,`(PAYUNi扣運)${note}`);
+      await send(advSheet,date,'支出','甜點支出','手續費',acc,fee,`(PAYUNi手續)${note}`);
+    }else if(isES){
+      const cr=parseInt(document.getElementById('adv-credit').value)||0,sh=parseInt(document.getElementById('adv-ship').value)||0;
+      await send(advSheet,date,'收入',sub,cat,acc,amt+sh-cr,`[商${amt}/運${sh}${cr?'/折'+cr:''}] ${note}`);
+      if(cr>0)await send(advSheet,date,'收入',sub,cat,'ES購物金',cr,`(點數)${note}`);
+    }else{
+      let fn=note;
+      if(document.getElementById('adv-log-wrap').style.display!=='none')fn=`[${document.getElementById('adv-log').value}] ${note}`;
+      await send(advSheet,date,advTyp,sub,cat,acc,amt,fn);
+    }
+    document.getElementById('adv-amt').value='';
+    document.getElementById('adv-note').value='';
+    msg.style.color='var(--green-text)';msg.textContent='✅ 已記到「'+advSheet+'」！';
+    cc();loadData(true);
+    setTimeout(()=>{msg.textContent='';},2500);
+  }catch(e){msg.style.color='var(--red)';msg.textContent='❌ 失敗，請重試';}
+  btn.disabled=false;
+}
+
+initDate();loadData(false);
 </script>
 </body>
 </html>
