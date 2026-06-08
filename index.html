@@ -141,8 +141,12 @@ select,input[type=number],input[type=date],input[type=text]{width:100%;padding:1
   <div id="alert-area"></div>
 
   <div class="status-card">
-    <div class="status-label">現在可用（淨現金）</div>
-    <div class="status-num" id="s-net">讀取中…</div>
+    <div class="status-label">真正可動用</div>
+    <div class="status-num" id="s-available">讀取中…</div>
+    <div class="status-row" style="margin-bottom:8px">
+      <div class="status-sub"><div class="status-sub-label">淨現金</div><div class="status-sub-val" id="s-net">--</div></div>
+      <div class="status-sub"><div class="status-sub-label">本月應繳</div><div class="status-sub-val" id="s-payable">--</div></div>
+    </div>
     <div class="status-row">
       <div class="status-sub"><div class="status-sub-label">本月收入</div><div class="status-sub-val" id="s-income">--</div></div>
       <div class="status-sub"><div class="status-sub-label">本月支出</div><div class="status-sub-val" id="s-expense">--</div></div>
@@ -406,9 +410,13 @@ const ACC_MAP={
 function renderDash(d){
   dash=d;
   const net=parseInt(String(d.netCash).replace(/[^0-9-]/g,''))||0;
-  const el=document.getElementById('s-net');
-  el.textContent=fmtN(net);
-  el.className='status-num '+(net>20000?'ok':net>5000?'warn':'danger');
+  const available=parseInt(String(d.available||'0').replace(/[^0-9-]/g,''))||0;
+  const payable=parseInt(String(d.payable||'0').replace(/[^0-9-]/g,''))||0;
+  document.getElementById('s-net').textContent=fmtN(net);
+  const avEl=document.getElementById('s-available');
+  avEl.textContent=fmtN(available);
+  avEl.className='status-num '+(available>20000?'ok':available>5000?'warn':'danger');
+  document.getElementById('s-payable').textContent=fmt(payable);
   document.getElementById('s-income').textContent=fmt(d.monthIncome);
   document.getElementById('s-expense').textContent=fmt(d.monthExpense);
   document.getElementById('s-debt').textContent=fmt(parseInt(String(d.debt).replace(/[^0-9]/g,''))||0);
